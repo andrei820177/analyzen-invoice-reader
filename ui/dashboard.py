@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import threading
+from datetime import datetime
 from typing import Dict
 
 import pyqtgraph as pg
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel,
     QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
 )
+from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
 
 pg.setConfigOptions(antialias=True, background="#fefefe", foreground="#2e3552")
@@ -209,6 +212,56 @@ class DashboardPage(QWidget):
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
 
+        # Exchange-rate status bar (bottom of page)
+        self._fx_bar = QWidget()
+        self._fx_bar.setFixedHeight(24)
+        self._fx_bar.setStyleSheet(
+            "background: #f6f7f9; border-top: 1px solid #e3e5ec;"
+        )
+        fx_layout = QHBoxLayout(self._fx_bar)
+        fx_layout.setContentsMargins(16, 0, 16, 0)
+        self._fx_label = QLabel()
+        self._fx_label.setStyleSheet(
+            "color: #939ab0; font-size: 10px; background: transparent;"
+        )
+        fx_layout.addWidget(self._fx_label)
+        fx_layout.addStretch()
+        outer.addWidget(self._fx_bar)
+
+        # Fetch rates in background; update label every 2 s until fresh
+        self._fx_timer = QTimer(self)
+        self._fx_timer.timeout.connect(self._update_fx_label)
+        self._fx_timer.start(2000)
+        threading.Thread(target=refresh_rates, daemon=True).start()
+        self._update_fx_label()
+        self._base_currency = "RON"
+
+    def set_base_currency(self, currency: str) -> None:
+        self._base_currency = currency.upper()
+
+    def refresh_fx(self) -> None:
+        """Re-fetch rates after the source/base currency changed in settings."""
+        threading.Thread(target=refresh_rates, daemon=True).start()
+        if not self._fx_timer.isActive():
+            self._fx_timer.start(2000)
+        self._update_fx_label()
+
+    def _update_fx_label(self) -> None:
+        if is_rates_fresh():
+            self._fx_timer.stop()
+            rates = key_rates()
+            cur   = self._base_currency
+            parts = [f"{code} {rate:.4f} {cur}"
+                     for code, rate in rates.items() if rate is not None]
+            ts = datetime.now().strftime("%H:%M")
+            src = source_name()
+            self._fx_label.setText(
+                f"{src}  {' · '.join(parts)}  — {ts}" if parts else ""
+            )
+        else:
+            dots = "." * ((int(datetime.now().second) % 3) + 1)
+            self._fx_label.setText(f"Se descarca cursul valutar{dots}")
+
     def retranslate(self) -> None:
         for card in (self._kpi_invoices, self._kpi_value, self._kpi_vat, self._kpi_flagged):
             card.retranslate()
@@ -218,9 +271,10 @@ class DashboardPage(QWidget):
         self._pie.update()
 
     def update_summary(self, summary: dict) -> None:
+        cur = self._base_currency
         self._kpi_invoices.set_value(str(summary.get("total_invoices", 0)))
-        self._kpi_value.set_value(f"{summary.get('total_value', 0):,.0f} RON")
-        self._kpi_vat.set_value(f"{summary.get('total_vat', 0):,.0f} RON")
+        self._kpi_value.set_value(f"{summary.get('total_value', 0):,.0f} {cur}")
+        self._kpi_vat.set_value(f"{summary.get('total_vat', 0):,.0f} {cur}")
         self._kpi_flagged.set_value(str(summary.get("flagged_count", 0)))
         self._update_monthly_chart(summary.get("per_month", {}))
         self._pie.set_data(summary.get("per_category", {}))

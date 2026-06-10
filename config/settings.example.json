@@ -5,6 +5,8 @@
   "outlier_std_dev_multiplier": 2.0,
   "tesseract_path": "",
   "language": "ro",
+  "base_currency": "RON",
+  "fx_source": "BNR",
   "smtp_host": "",
   "smtp_port": 587,
   "smtp_user": "",

@@ -11,23 +11,25 @@ _NAV_KEYS = [
     ("export",    "nav_export"),
 ]
 
+# reference.html: .nav.on = surface bg + line border + ink text;
+# .nav:hover = surface-3 bg
 _BTN_ACTIVE = """
     QPushButton {
         text-align: left; padding: 7px 9px; margin: 1px 0px;
-        border: 1px solid rgba(47,143,107,0.22); border-radius: 8px;
+        border: 1px solid #e3e5ec; border-radius: 8px;
         font-size: 13px; font-weight: 600;
-        color: #1a6b4f; background: rgba(47,143,107,0.08);
+        color: #2e3552; background: #fefefe;
     }
-    QPushButton:hover { background: rgba(47,143,107,0.13); }
+    QPushButton:hover { background: #fefefe; }
 """
 _BTN_INACTIVE = """
     QPushButton {
         text-align: left; padding: 7px 9px; margin: 1px 0px;
         border: 1px solid transparent; border-radius: 8px;
         font-size: 13px; font-weight: 600;
-        color: #6b7291; background: #f4f5f8;
+        color: #5d6480; background: #f4f5f8;
     }
-    QPushButton:hover { background: #eeeff3; color: #2e3552; }
+    QPushButton:hover { background: #eceef3; color: #2e3552; }
 """
 
 
@@ -94,6 +96,14 @@ class Sidebar(QWidget):
         sep.setStyleSheet("background: #e3e5ec; max-height: 1px; margin: 0;")
         root.addWidget(sep)
         root.addSpacing(8)
+
+        # Section header (.side-h in reference)
+        self._section_lbl = QLabel("MENU")
+        self._section_lbl.setStyleSheet(
+            "color: #939ab0; font-size: 10px; font-weight: 700;"
+            " letter-spacing: 1px; padding: 4px 8px 2px 8px; background: transparent;"
+        )
+        root.addWidget(self._section_lbl)
 
         # Nav buttons
         self._nav_buttons: dict[str, QPushButton] = {}

@@ -13,6 +13,7 @@ from PyQt6.QtWidgets import (
     QVBoxLayout, QWidget,
 )
 
+from core.currency import configure as configure_currency
 from core.extractor import extract_batch
 from core.watcher import FolderWatcher
 from data.models import Invoice
@@ -306,7 +307,14 @@ class MainWindow(QMainWindow):
         self._current_page = "dashboard"
         self._collected_invoices: List[Invoice] = []
 
+        settings = _load_settings()
+        configure_currency(
+            settings.get("fx_source", "BNR"),
+            settings.get("base_currency", "RON"),
+        )
+
         self._build_ui()
+        self._dashboard.set_base_currency(settings.get("base_currency", "RON"))
         self._connect_signals()
         self._check_auto_watch()
 
@@ -650,6 +658,15 @@ class MainWindow(QMainWindow):
                 L().load(new_lang)
                 self._sidebar.set_language(new_lang)
                 self._retranslate_all()
+
+            configure_currency(
+                settings.get("fx_source", "BNR"),
+                settings.get("base_currency", "RON"),
+            )
+            self._dashboard.set_base_currency(settings.get("base_currency", "RON"))
+            self._dashboard.refresh_fx()
+            if len(self._idf) > 0:
+                self._refresh_views()
 
     def _check_auto_watch(self) -> None:
         settings = _load_settings()

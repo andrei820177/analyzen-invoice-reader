@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import pandas as pd
 
+from core.currency import convert
 from data.models import Invoice
 
 
@@ -119,15 +120,26 @@ class InvoiceDataFrame:
                 "flagged_count": 0,
             }
 
+        # Convert totals to the configured base currency for aggregations
+        df2 = df.copy()
+        df2["total_base"] = df2.apply(
+            lambda r: convert(float(r["total"] or 0), str(r.get("currency", "RON"))),
+            axis=1,
+        )
+        df2["vat_base"] = df2.apply(
+            lambda r: convert(float(r["vat_amount"] or 0), str(r.get("currency", "RON"))),
+            axis=1,
+        )
+
         per_supplier = (
-            df.groupby("supplier_name")["total"]
+            df2.groupby("supplier_name")["total_base"]
             .sum()
             .sort_values(ascending=False)
             .head(10)
             .to_dict()
         )
 
-        per_category = df.groupby("category")["total"].sum().to_dict()
+        per_category = df2.groupby("category")["total_base"].sum().to_dict()
 
         def _month_key(d):
             try:
@@ -140,16 +152,15 @@ class InvoiceDataFrame:
             except (AttributeError, TypeError, ValueError):
                 return "N/A"
 
-        df2 = df.copy()
         df2["month"] = df2["issue_date"].apply(_month_key)
-        per_month = df2.groupby("month")["total"].sum().sort_index().to_dict()
+        per_month = df2.groupby("month")["total_base"].sum().sort_index().to_dict()
 
         flagged = df["is_duplicate"] | df["is_outlier"] | df["is_near_due"]
 
         return {
             "total_invoices": len(df),
-            "total_value": float(df["total"].sum()),
-            "total_vat": float(df["vat_amount"].sum()),
+            "total_value": float(df2["total_base"].sum()),
+            "total_vat": float(df2["vat_base"].sum()),
             "per_supplier": per_supplier,
             "per_category": per_category,
             "per_month": per_month,

@@ -4,18 +4,19 @@ from typing import Any
 
 import pandas as pd
 from PyQt6.QtCore import (
-    QAbstractTableModel, QModelIndex, Qt, QSortFilterProxyModel, pyqtSignal,
+    QAbstractTableModel, QModelIndex, QRect, Qt, QSortFilterProxyModel, pyqtSignal,
 )
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QFont, QFontMetrics, QPainter
 from PyQt6.QtWidgets import (
     QAbstractItemView, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QTableView, QVBoxLayout, QWidget,
+    QLineEdit, QPushButton, QStyle, QStyledItemDelegate,
+    QTableView, QVBoxLayout, QWidget,
 )
+from data.processor import row_status
 from ui.detail_drawer import DetailDrawer
 from ui.lang import L
 
 _COL_DEFS = [
-    ("file_name",        "col_file"),
     ("supplier_name",    "col_supplier"),
     ("invoice_number",   "col_invoice_no"),
     ("issue_date",       "col_date"),
@@ -24,19 +25,30 @@ _COL_DEFS = [
     ("currency",         "col_currency"),
     ("vat_amount",       "col_vat"),
     ("category",         "col_category"),
+    ("status",           "col_status"),
     ("confidence_score", "col_confidence"),
-    ("is_duplicate",     "flag_duplicate"),
-    ("is_outlier",       "flag_outlier"),
-    ("is_near_due",      "flag_near_due"),
+    ("file_name",        "col_file"),
 ]
 
 _COL_KEYS   = [c[0] for c in _COL_DEFS]
 _COL_I18N   = [c[1] for c in _COL_DEFS]
+_COL_IDX    = {k: i for i, k in enumerate(_COL_KEYS)}
+
+# required fields whose emptiness is highlighted red (.empty-val in reference)
+_REQUIRED = {"supplier_name", "invoice_number", "issue_date", "total"}
+
+# custom roles
+_STATUS_ROLE = Qt.ItemDataRole.UserRole       # status key for the pill delegate
+_SORT_ROLE   = Qt.ItemDataRole.UserRole + 1   # numeric/normalized sort key
+
+_EMPTY_RED = QColor("#b3261e")
 
 # soft state tints from reference.html (--err-soft / --warn-soft)
 _FLAG_RED    = QColor("#faeae7")
 _FLAG_ORANGE = QColor("#f9f0dd")
 _FLAG_YELLOW = QColor("#fbf6e4")
+
+_STATUS_RANK = {"error": 0, "warning": 1, "valid": 2}
 
 _FILTER_KEYS = [
     "filter_all", "filter_flagged", "filter_duplicates",
@@ -55,15 +67,33 @@ _CHIP_STYLE = """
 """
 
 
+def _is_empty(val: Any) -> bool:
+    if val is None:
+        return True
+    try:
+        if isinstance(val, float) and pd.isna(val):
+            return True
+    except (TypeError, ValueError):
+        pass
+    if isinstance(val, str):
+        return val.strip() == ""
+    if isinstance(val, (int, float)):
+        return float(val) == 0.0
+    return False
+
+
 class InvoiceTableModel(QAbstractTableModel):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._df: pd.DataFrame = pd.DataFrame(columns=_COL_KEYS)
+        self._df: pd.DataFrame = pd.DataFrame()
+        self._threshold = 0.6
+
+    def set_threshold(self, t: float) -> None:
+        self._threshold = t
 
     def load(self, df: pd.DataFrame) -> None:
         self.beginResetModel()
-        cols = [k for k in _COL_KEYS if k in df.columns]
-        self._df = df[cols].copy() if cols else pd.DataFrame(columns=_COL_KEYS)
+        self._df = df.reset_index(drop=True).copy()
         self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()) -> int:
@@ -82,18 +112,38 @@ class InvoiceTableModel(QAbstractTableModel):
             return Qt.AlignmentFlag.AlignCenter
         return None
 
+    def _row(self, i: int):
+        return self._df.iloc[i]
+
     def data(self, index: QModelIndex, role=Qt.ItemDataRole.DisplayRole):
-        if not index.isValid():
+        if not index.isValid() or self._df.empty:
             return None
-        row, col = index.row(), index.column()
-        key = _COL_KEYS[col]
-        val = self._df.iloc[row][key] if key in self._df.columns else None
+        r = self._row(index.row())
+        key = _COL_KEYS[index.column()]
+        val = r.get(key) if key != "status" else None
 
         if role == Qt.ItemDataRole.DisplayRole:
+            if key == "status":
+                return L().t(f"status_{row_status(r, self._threshold)}")
             return self._format(key, val)
 
+        if role == _STATUS_ROLE and key == "status":
+            return row_status(r, self._threshold)
+
+        if role == _SORT_ROLE:
+            return self._sort_key(key, val, r)
+
+        if role == Qt.ItemDataRole.ForegroundRole:
+            if key in _REQUIRED and _is_empty(val):
+                return _EMPTY_RED
+
+        if role == Qt.ItemDataRole.FontRole:
+            if key in _REQUIRED and _is_empty(val):
+                f = QFont()
+                f.setItalic(True)
+                return f
+
         if role == Qt.ItemDataRole.BackgroundRole:
-            r = self._df.iloc[row]
             if r.get("is_duplicate", False):
                 return _FLAG_ORANGE
             if r.get("is_outlier", False):
@@ -105,35 +155,140 @@ class InvoiceTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if key in ("total", "vat_amount", "confidence_score"):
                 return Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-            if key in ("is_duplicate", "is_outlier", "is_near_due", "currency"):
+            if key == "currency":
                 return Qt.AlignmentFlag.AlignCenter
             return Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter
 
         return None
 
     def _format(self, key: str, val: Any) -> str:
+        if key in _REQUIRED and _is_empty(val):
+            return "—"
         if val is None or (isinstance(val, float) and pd.isna(val)):
             return ""
-        if key in ("is_duplicate", "is_outlier", "is_near_due"):
-            return "✓" if val else ""
         if key in ("total", "vat_amount"):
             try:
                 return f"{float(val):,.2f}"
-            except Exception:
+            except (TypeError, ValueError):
                 return str(val)
         if key == "confidence_score":
             try:
                 return f"{float(val):.0%}"
-            except Exception:
+            except (TypeError, ValueError):
                 return str(val)
         if key in ("issue_date", "due_date"):
             return "" if val is None else str(val)
         return str(val)
 
+    def _sort_key(self, key: str, val: Any, r) -> Any:
+        if key == "status":
+            return _STATUS_RANK.get(row_status(r, self._threshold), 9)
+        if key in ("total", "vat_amount", "confidence_score"):
+            try:
+                return float(val or 0)
+            except (TypeError, ValueError):
+                return 0.0
+        if key in ("issue_date", "due_date"):
+            return str(val) if val is not None else ""
+        return str(val or "").lower()
+
     def get_row_data(self, row: int) -> dict:
         if row < 0 or row >= len(self._df):
             return {}
         return self._df.iloc[row].to_dict()
+
+
+class StatusPillDelegate(QStyledItemDelegate):
+    """Paints valid/warning/error as a coloured pill with a dot (.stat in reference)."""
+
+    _STYLE = {
+        "valid":   ("#e3f1ea", "#1a6b4f", "#2f8f6b"),
+        "warning": ("#f9f0dd", "#8a6d1a", "#d8a72e"),
+        "error":   ("#faeae7", "#b3261e", "#e2483a"),
+    }
+
+    def paint(self, painter, option, index):
+        status = index.data(_STATUS_ROLE) or "valid"
+        label = index.data(Qt.ItemDataRole.DisplayRole) or ""
+        bg, fg, dot = self._STYLE.get(status, self._STYLE["valid"])
+
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.fillRect(option.rect, QColor(47, 143, 107, 30))
+
+        r = option.rect
+        fm = QFontMetrics(option.font)
+        pill_h = 20
+        pill_w = fm.horizontalAdvance(label) + 26
+        x = r.x() + 8
+        y = r.y() + (r.height() - pill_h) // 2
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(bg))
+        painter.drawRoundedRect(x, y, pill_w, pill_h, 10, 10)
+        painter.setBrush(QColor(dot))
+        painter.drawEllipse(x + 9, y + (pill_h - 6) // 2, 6, 6)
+        painter.setPen(QColor(fg))
+        painter.setFont(option.font)
+        painter.drawText(QRect(x + 19, y, pill_w - 19, pill_h),
+                         int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                         label)
+        painter.restore()
+
+
+class VendorAvatarDelegate(QStyledItemDelegate):
+    """Paints a coloured initials avatar + supplier name (.vendor-cell in reference)."""
+
+    _COLORS = ["#2f8f6b", "#3478c6", "#9b59b6", "#e08234",
+               "#1f9c8f", "#c0455b", "#5b6cc4", "#d8a72e"]
+
+    def paint(self, painter, option, index):
+        name = (index.data(Qt.ItemDataRole.DisplayRole) or "").strip()
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.fillRect(option.rect, QColor(47, 143, 107, 30))
+
+        r = option.rect
+        if not name or name == "—":
+            f = QFont(option.font)
+            f.setItalic(True)
+            painter.setFont(f)
+            painter.setPen(_EMPTY_RED)
+            painter.drawText(QRect(r.x() + 10, r.y(), r.width() - 14, r.height()),
+                             int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                             "—")
+            painter.restore()
+            return
+
+        size = 24
+        x = r.x() + 8
+        y = r.y() + (r.height() - size) // 2
+        initials = "".join(w[0] for w in name.split()[:2]).upper()[:2] or "?"
+        color = self._COLORS[sum(ord(c) for c in name) % len(self._COLORS)]
+
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor(color))
+        painter.drawRoundedRect(x, y, size, size, 6, 6)
+        af = QFont(option.font)
+        af.setBold(True)
+        af.setPointSizeF(max(7.5, option.font.pointSizeF() - 1))
+        painter.setFont(af)
+        painter.setPen(QColor("#ffffff"))
+        painter.drawText(QRect(x, y, size, size),
+                         int(Qt.AlignmentFlag.AlignCenter), initials)
+
+        tx = x + size + 9
+        painter.setFont(option.font)
+        painter.setPen(QColor("#2e3552"))
+        fm = QFontMetrics(option.font)
+        elided = fm.elidedText(name, Qt.TextElideMode.ElideRight,
+                               r.right() - tx - 6)
+        painter.drawText(QRect(tx, r.y(), r.right() - tx - 4, r.height()),
+                         int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                         elided)
+        painter.restore()
 
 
 class InvoiceTableView(QWidget):
@@ -195,6 +350,7 @@ class InvoiceTableView(QWidget):
         self._proxy.setSourceModel(self._model)
         self._proxy.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self._proxy.setFilterKeyColumn(-1)
+        self._proxy.setSortRole(_SORT_ROLE)   # numeric/normalized sorting
 
         self._table = QTableView()
         self._table.setModel(self._proxy)
@@ -226,9 +382,14 @@ class InvoiceTableView(QWidget):
             QTableView::item:selected { background: rgba(47,143,107,0.12); color: #1a6b4f; }
         """)
 
-        widths = [160, 180, 110, 90, 90, 90, 55, 75, 90, 70, 55, 55, 55]
+        widths = [200, 110, 95, 95, 95, 60, 85, 100, 110, 80, 150]
         for i, w in enumerate(widths):
             self._table.setColumnWidth(i, w)
+
+        self._table.setItemDelegateForColumn(
+            _COL_IDX["supplier_name"], VendorAvatarDelegate(self._table))
+        self._table.setItemDelegateForColumn(
+            _COL_IDX["status"], StatusPillDelegate(self._table))
 
         # Table + slide-in detail drawer side by side
         content = QHBoxLayout()

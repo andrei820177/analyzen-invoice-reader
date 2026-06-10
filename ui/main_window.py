@@ -630,8 +630,24 @@ class MainWindow(QMainWindow):
         self._dashboard.update_summary(summary)
         self._table_view.load_data(self._idf.get_all())
         self._export_page.set_idf(self._idf)
+        self._update_sidebar()
         if len(self._idf) > 0:
             self._on_page_changed("dashboard")
+
+    def _update_sidebar(self) -> None:
+        stats = self._idf.get_sidebar_stats()
+        self._sidebar.set_counts({"invoices": stats["count"]})
+        chips = [
+            (code, f"{amt:,.0f}")
+            for code, amt in sorted(
+                stats["per_currency"].items(), key=lambda kv: kv[1], reverse=True
+            )
+        ]
+        total_text = f"{stats['total_base']:,.0f} {stats['base']}"
+        s = stats["status"]
+        self._sidebar.set_summary(
+            total_text, chips, (s["valid"], s["warning"], s["error"])
+        )
 
     @pyqtSlot(dict)
     def _on_invoice_updated(self, fields: dict) -> None:
@@ -642,6 +658,7 @@ class MainWindow(QMainWindow):
         # refresh data without leaving the invoices page
         self._dashboard.update_summary(self._idf.get_summary())
         self._table_view.load_data(self._idf.get_all())
+        self._update_sidebar()
         self._log.append(f"{path.split(chr(92))[-1].split('/')[-1]}: {L().t('done')}", "success")
 
     def _clear_data(self) -> None:
@@ -655,6 +672,7 @@ class MainWindow(QMainWindow):
             self._idf.clear()
             self._table_view.clear()
             self._dashboard.update_summary(self._idf.get_summary())
+            self._update_sidebar()
             self._stack.setCurrentIndex(0)
             self._log.append(L().t("btn_clear"), "warning")
 

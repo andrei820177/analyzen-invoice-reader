@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import pandas as pd
 
-from core.currency import convert
+from core.currency import base_currency, convert
 from data.models import Invoice
 
 
@@ -200,6 +200,30 @@ class InvoiceDataFrame:
             "per_month": per_month,
             "flagged_count": int(flagged.sum()),
         }
+
+    def get_sidebar_stats(self, threshold: float = 0.6) -> dict:
+        """Totals per original currency + valid/warning/error counts for the sidebar."""
+        df = self._df
+        if df.empty:
+            return {"count": 0, "total_base": 0.0, "base": base_currency(),
+                    "per_currency": {}, "status": {"valid": 0, "warning": 0, "error": 0}}
+
+        per_currency: dict = {}
+        for cur, grp in df.groupby("currency"):
+            vals = pd.to_numeric(grp["total"], errors="coerce").fillna(0)
+            per_currency[str(cur)] = float(vals.sum())
+
+        total_base = float(df.apply(
+            lambda r: convert(float(r["total"] or 0), str(r.get("currency", "RON"))),
+            axis=1,
+        ).sum())
+
+        status = {"valid": 0, "warning": 0, "error": 0}
+        for _, r in df.iterrows():
+            status[row_status(r, threshold)] += 1
+
+        return {"count": len(df), "total_base": total_base, "base": base_currency(),
+                "per_currency": per_currency, "status": status}
 
     def __len__(self) -> int:
         return len(self._df)

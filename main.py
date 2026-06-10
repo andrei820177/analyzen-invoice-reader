@@ -8,10 +8,18 @@ else:
     ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 
+from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QApplication
 
 from ui.main_window import MainWindow
+
+# Crisp fractional DPI scaling (125%, 150%, ...) so the window stays sharp and
+# correctly sized across different monitor resolutions. Must be set before the
+# QApplication is constructed.
+QApplication.setHighDpiScaleFactorRoundingPolicy(
+    Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+)
 
 
 def apply_light_theme(app: QApplication) -> None:

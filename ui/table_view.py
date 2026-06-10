@@ -363,6 +363,10 @@ class InvoiceTableView(QWidget):
         self._table.verticalHeader().setVisible(False)
         self._table.horizontalHeader().setHighlightSections(False)
         self._table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        # smooth per-pixel scrolling (benefits high-refresh-rate monitors)
+        self._table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self._table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self._table.verticalScrollBar().setSingleStep(12)
         self._table.setStyleSheet("""
             QTableView {
                 background: #fefefe; border: 1px solid #e3e5ec; border-radius: 11px;
@@ -385,6 +389,9 @@ class InvoiceTableView(QWidget):
         widths = [200, 110, 95, 95, 95, 60, 85, 100, 110, 80, 150]
         for i, w in enumerate(widths):
             self._table.setColumnWidth(i, w)
+        # supplier column flexes to fill the remaining width on resize
+        self._table.horizontalHeader().setSectionResizeMode(
+            _COL_IDX["supplier_name"], QHeaderView.ResizeMode.Stretch)
 
         self._table.setItemDelegateForColumn(
             _COL_IDX["supplier_name"], VendorAvatarDelegate(self._table))
@@ -398,7 +405,6 @@ class InvoiceTableView(QWidget):
         content.addWidget(self._table, 1)
 
         self._drawer = DetailDrawer()
-        self._drawer.setVisible(False)
         self._drawer.closed.connect(self._close_drawer)
         self._drawer.saved.connect(self._on_drawer_saved)
         content.addWidget(self._drawer)
@@ -456,11 +462,10 @@ class InvoiceTableView(QWidget):
         if not row:
             return
         self.selection_changed.emit(row)
-        self._drawer.load(row)
-        self._drawer.setVisible(True)
+        self._drawer.open_with(row)
 
     def _close_drawer(self) -> None:
-        self._drawer.setVisible(False)
+        self._drawer.close_panel()
         self._table.clearSelection()
 
     def _on_drawer_saved(self, fields: dict) -> None:

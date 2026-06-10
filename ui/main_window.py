@@ -266,7 +266,8 @@ class MainWindow(QMainWindow):
         init_lang()
 
         self.setWindowTitle(L().t("app_title"))
-        self.setMinimumSize(1100, 720)
+        # generous lower bound so the app stays usable on smaller resolutions
+        self.setMinimumSize(880, 560)
         self.resize(1280, 800)
         self.setStyleSheet("""
             QMainWindow { background: #e2e6ed; }

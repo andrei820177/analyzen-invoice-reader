@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, Qt, pyqtSignal
 from PyQt6.QtWidgets import (
     QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QVBoxLayout, QWidget,
@@ -78,7 +78,11 @@ class DetailDrawer(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setFixedWidth(360)
+        self._target_w = 360
+        # start collapsed; open_with()/close_panel() animate the width
+        self.setMinimumWidth(0)
+        self.setMaximumWidth(0)
+        self._anim: QPropertyAnimation | None = None
         self.setStyleSheet(
             f"DetailDrawer {{ background: {_SURFACE}; border-left: 1px solid {_LINE}; }}"
         )
@@ -140,6 +144,7 @@ class DetailDrawer(QFrame):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("background: transparent;")
+        scroll.verticalScrollBar().setSingleStep(12)   # smoother wheel scroll
         body = QWidget()
         body.setStyleSheet("background: transparent;")
         self._form = QVBoxLayout(body)
@@ -206,6 +211,28 @@ class DetailDrawer(QFrame):
         return wrap
 
     # ------------------------------------------------------------------
+
+    def open_with(self, row: dict) -> None:
+        """Load a row and slide the panel open (or just refresh if already open)."""
+        self.load(row)
+        if self.isVisible() and self.maximumWidth() >= self._target_w:
+            return
+        self.setVisible(True)
+        self._animate(self._target_w)
+
+    def close_panel(self) -> None:
+        self._animate(0, hide=True)
+
+    def _animate(self, to: int, hide: bool = False) -> None:
+        anim = QPropertyAnimation(self, b"maximumWidth", self)
+        anim.setDuration(190)
+        anim.setStartValue(self.maximumWidth())
+        anim.setEndValue(to)
+        anim.setEasingCurve(QEasingCurve.Type.OutCubic)
+        if hide:
+            anim.finished.connect(lambda: self.setVisible(False))
+        anim.start()
+        self._anim = anim   # keep a reference so it isn't garbage-collected
 
     def load(self, row: dict) -> None:
         self._file_path = str(row.get("file_path", ""))

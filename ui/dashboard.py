@@ -152,6 +152,7 @@ class DashboardPage(QWidget):
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll.setStyleSheet("background: transparent;")
+        scroll.verticalScrollBar().setSingleStep(12)   # smoother wheel scroll
 
         content = QWidget()
         content.setStyleSheet("background: transparent;")

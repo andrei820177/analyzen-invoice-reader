@@ -35,6 +35,10 @@ _INPUT_STYLE = (
     "QLineEdit:focus,QSpinBox:focus,QDoubleSpinBox:focus,QComboBox:focus{"
     "border-color:#2f8f6b;}"
     "QComboBox::drop-down{border:none;}"
+    # dropdown popup: explicit colors so items are never white-on-white
+    "QComboBox QAbstractItemView{"
+    "background:#fefefe;color:#2e3552;border:1px solid #e3e5ec;"
+    "selection-background-color:rgba(47,143,107,0.12);selection-color:#1a6b4f;}"
 )
 
 
@@ -43,7 +47,11 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Setari")
         self.setMinimumWidth(500)
-        self.setStyleSheet("QDialog{background:#e2e6ed;}")
+        self.setStyleSheet(
+            "QDialog{background:#e2e6ed;}"
+            "QLabel{color:#2e3552;background:transparent;}"
+            "QCheckBox{color:#2e3552;background:transparent;}"
+        )
 
         self._settings = _load()
 

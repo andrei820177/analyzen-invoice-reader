@@ -270,7 +270,7 @@ class MainWindow(QMainWindow):
         self.resize(1280, 800)
         self.setStyleSheet("""
             QMainWindow { background: #e2e6ed; }
-            QWidget { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; }
+            QWidget { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #2e3552; }
 
             QScrollBar:vertical {
                 background: transparent;

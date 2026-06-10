@@ -71,5 +71,15 @@
   "export_email": "Send email report",
   "no_invoices": "No invoices processed yet",
   "confirm_clear": "Clear all invoices from the list?",
-  "col_currency": "Currency"
+  "col_currency": "Currency",
+  "btn_save_changes": "Save changes",
+  "unknown_supplier": "Unknown supplier",
+  "conf_low": "low",
+  "label_cui": "Tax ID",
+  "label_subtotal": "Subtotal",
+  "side_total": "Total value",
+  "status_valid": "Valid",
+  "status_warning": "Warning",
+  "status_error": "Error",
+  "col_status": "Status"
 }

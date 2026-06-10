@@ -71,5 +71,15 @@
   "export_email": "Trimite raport pe email",
   "no_invoices": "Nu exista facturi procesate",
   "confirm_clear": "Stergeti toate facturile din lista?",
-  "col_currency": "Moneda"
+  "col_currency": "Moneda",
+  "btn_save_changes": "Salveaza modificarile",
+  "unknown_supplier": "Furnizor necunoscut",
+  "conf_low": "redus",
+  "label_cui": "CUI / CIF",
+  "label_subtotal": "Subtotal",
+  "side_total": "Valoare totala",
+  "status_valid": "Valid",
+  "status_warning": "Atentie",
+  "status_error": "Eroare",
+  "col_status": "Status"
 }

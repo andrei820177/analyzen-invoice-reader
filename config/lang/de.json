@@ -59,5 +59,15 @@
   "export_email": "Bericht per E-Mail senden",
   "no_invoices": "Keine Rechnungen verarbeitet",
   "confirm_clear": "Alle Rechnungen aus der Liste entfernen?",
-  "col_currency": "Währung"
+  "col_currency": "Währung",
+  "btn_save_changes": "Änderungen speichern",
+  "unknown_supplier": "Unbekannter Lieferant",
+  "conf_low": "niedrig",
+  "label_cui": "USt-IdNr",
+  "label_subtotal": "Zwischensumme",
+  "side_total": "Gesamtwert",
+  "status_valid": "Gültig",
+  "status_warning": "Warnung",
+  "status_error": "Fehler",
+  "col_status": "Status"
 }

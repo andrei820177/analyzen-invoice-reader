@@ -59,5 +59,15 @@
   "export_email": "Invia report via e-mail",
   "no_invoices": "Nessuna fattura elaborata",
   "confirm_clear": "Rimuovere tutte le fatture dalla lista?",
-  "col_currency": "Valuta"
+  "col_currency": "Valuta",
+  "btn_save_changes": "Salva modifiche",
+  "unknown_supplier": "Fornitore sconosciuto",
+  "conf_low": "bassa",
+  "label_cui": "P. IVA",
+  "label_subtotal": "Imponibile",
+  "side_total": "Valore totale",
+  "status_valid": "Valido",
+  "status_warning": "Avviso",
+  "status_error": "Errore",
+  "col_status": "Stato"
 }

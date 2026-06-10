@@ -59,5 +59,15 @@
   "export_email": "Send rapport pr. e-mail",
   "no_invoices": "Ingen fakturaer behandlet",
   "confirm_clear": "Fjern alle fakturaer fra listen?",
-  "col_currency": "Valuta"
+  "col_currency": "Valuta",
+  "btn_save_changes": "Gem ændringer",
+  "unknown_supplier": "Ukendt leverandør",
+  "conf_low": "lav",
+  "label_cui": "CVR-nr",
+  "label_subtotal": "Subtotal",
+  "side_total": "Total",
+  "status_valid": "Gyldig",
+  "status_warning": "Advarsel",
+  "status_error": "Fejl",
+  "col_status": "Status"
 }

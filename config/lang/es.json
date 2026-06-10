@@ -59,5 +59,15 @@
   "export_email": "Enviar informe por correo",
   "no_invoices": "No hay facturas procesadas",
   "confirm_clear": "¿Eliminar todas las facturas de la lista?",
-  "col_currency": "Moneda"
+  "col_currency": "Moneda",
+  "btn_save_changes": "Guardar cambios",
+  "unknown_supplier": "Proveedor desconocido",
+  "conf_low": "baja",
+  "label_cui": "NIF",
+  "label_subtotal": "Base imponible",
+  "side_total": "Valor total",
+  "status_valid": "Válido",
+  "status_warning": "Aviso",
+  "status_error": "Error",
+  "col_status": "Estado"
 }

@@ -59,5 +59,15 @@
   "export_email": "Envoyer rapport par e-mail",
   "no_invoices": "Aucune facture traitée",
   "confirm_clear": "Effacer toutes les factures de la liste ?",
-  "col_currency": "Devise"
+  "col_currency": "Devise",
+  "btn_save_changes": "Enregistrer",
+  "unknown_supplier": "Fournisseur inconnu",
+  "conf_low": "faible",
+  "label_cui": "N° TVA",
+  "label_subtotal": "Sous-total",
+  "side_total": "Valeur totale",
+  "status_valid": "Valide",
+  "status_warning": "Attention",
+  "status_error": "Erreur",
+  "col_status": "Statut"
 }

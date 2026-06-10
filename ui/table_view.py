@@ -11,6 +11,7 @@ from PyQt6.QtWidgets import (
     QAbstractItemView, QHBoxLayout, QHeaderView, QLabel,
     QLineEdit, QPushButton, QTableView, QVBoxLayout, QWidget,
 )
+from ui.detail_drawer import DetailDrawer
 from ui.lang import L
 
 _COL_DEFS = [
@@ -137,6 +138,7 @@ class InvoiceTableModel(QAbstractTableModel):
 
 class InvoiceTableView(QWidget):
     selection_changed = pyqtSignal(dict)
+    invoice_updated   = pyqtSignal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -228,7 +230,18 @@ class InvoiceTableView(QWidget):
         for i, w in enumerate(widths):
             self._table.setColumnWidth(i, w)
 
-        root.addWidget(self._table, 1)
+        # Table + slide-in detail drawer side by side
+        content = QHBoxLayout()
+        content.setContentsMargins(0, 0, 0, 0)
+        content.setSpacing(0)
+        content.addWidget(self._table, 1)
+
+        self._drawer = DetailDrawer()
+        self._drawer.setVisible(False)
+        self._drawer.closed.connect(self._close_drawer)
+        self._drawer.saved.connect(self._on_drawer_saved)
+        content.addWidget(self._drawer)
+        root.addLayout(content, 1)
 
         self._search.textChanged.connect(self._proxy.setFilterFixedString)
         self._table.selectionModel().selectionChanged.connect(self._on_selection)
@@ -272,7 +285,20 @@ class InvoiceTableView(QWidget):
         indexes = self._table.selectionModel().selectedRows()
         if indexes:
             src = self._proxy.mapToSource(indexes[0])
-            self.selection_changed.emit(self._model.get_row_data(src.row()))
+            row = self._model.get_row_data(src.row())
+            self.selection_changed.emit(row)
+            self._drawer.load(row)
+            self._drawer.setVisible(True)
+
+    def _close_drawer(self) -> None:
+        self._drawer.setVisible(False)
+        self._table.clearSelection()
+
+    def _on_drawer_saved(self, fields: dict) -> None:
+        self.invoice_updated.emit(fields)
+
+    def retranslate_drawer(self) -> None:
+        self._drawer.retranslate()
 
     def clear(self) -> None:
         self._full_df = pd.DataFrame()

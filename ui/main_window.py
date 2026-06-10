@@ -458,6 +458,7 @@ class MainWindow(QMainWindow):
         self._btn_clear.clicked.connect(self._clear_data)
 
         self._drop_zone.files_dropped.connect(self._process_files)
+        self._table_view.invoice_updated.connect(self._on_invoice_updated)
         self._export_page.set_idf(self._idf)
 
     # ------------------------------------------------------------------
@@ -493,6 +494,7 @@ class MainWindow(QMainWindow):
         self._drop_zone.retranslate()
         self._dashboard.retranslate()
         self._table_view.retranslate()
+        self._table_view.retranslate_drawer()
         self._export_page.retranslate()
         self._log.retranslate()
 
@@ -630,6 +632,17 @@ class MainWindow(QMainWindow):
         self._export_page.set_idf(self._idf)
         if len(self._idf) > 0:
             self._on_page_changed("dashboard")
+
+    @pyqtSlot(dict)
+    def _on_invoice_updated(self, fields: dict) -> None:
+        path = fields.pop("file_path", "")
+        if not path:
+            return
+        self._idf.update_invoice(path, fields)
+        # refresh data without leaving the invoices page
+        self._dashboard.update_summary(self._idf.get_summary())
+        self._table_view.load_data(self._idf.get_all())
+        self._log.append(f"{path.split(chr(92))[-1].split('/')[-1]}: {L().t('done')}", "success")
 
     def _clear_data(self) -> None:
         if len(self._idf) == 0:

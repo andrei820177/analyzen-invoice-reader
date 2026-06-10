@@ -59,5 +59,15 @@
   "export_email": "Отправить отчёт по эл. почте",
   "no_invoices": "Счета не обработаны",
   "confirm_clear": "Удалить все счета из списка?",
-  "col_currency": "Валюта"
+  "col_currency": "Валюта",
+  "btn_save_changes": "Сохранить",
+  "unknown_supplier": "Неизвестный поставщик",
+  "conf_low": "низкая",
+  "label_cui": "ИНН",
+  "label_subtotal": "Подытог",
+  "side_total": "Итого",
+  "status_valid": "Корректно",
+  "status_warning": "Внимание",
+  "status_error": "Ошибка",
+  "col_status": "Статус"
 }

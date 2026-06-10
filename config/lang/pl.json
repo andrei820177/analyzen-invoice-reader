@@ -59,5 +59,15 @@
   "export_email": "Wyślij raport e-mailem",
   "no_invoices": "Brak przetworzonych faktur",
   "confirm_clear": "Usunąć wszystkie faktury z listy?",
-  "col_currency": "Waluta"
+  "col_currency": "Waluta",
+  "btn_save_changes": "Zapisz zmiany",
+  "unknown_supplier": "Nieznany dostawca",
+  "conf_low": "niska",
+  "label_cui": "NIP",
+  "label_subtotal": "Netto",
+  "side_total": "Wartość",
+  "status_valid": "Poprawna",
+  "status_warning": "Uwaga",
+  "status_error": "Błąd",
+  "col_status": "Status"
 }

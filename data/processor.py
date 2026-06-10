@@ -19,6 +19,30 @@ _COLUMNS = [
 ]
 
 
+def row_status(row, threshold: float = 0.6) -> str:
+    """Classify an invoice row as 'valid' | 'warning' | 'error' for the UI pills.
+
+    error   - extraction essentially failed (no total) or confidence very low
+    warning - a flag is set (duplicate/outlier/near due) or confidence is low
+    valid   - clean, confident extraction
+    """
+    try:
+        conf = float(row.get("confidence_score") or 0)
+    except (TypeError, ValueError):
+        conf = 0.0
+    try:
+        total = float(row.get("total") or 0)
+    except (TypeError, ValueError):
+        total = 0.0
+
+    if total <= 0 or conf < threshold * 0.6:
+        return "error"
+    if (conf < threshold or row.get("is_duplicate")
+            or row.get("is_outlier") or row.get("is_near_due")):
+        return "warning"
+    return "valid"
+
+
 def _invoice_to_row(inv: Invoice) -> dict:
     return {
         "file_path": inv.file_path,
@@ -58,6 +82,16 @@ class InvoiceDataFrame:
         rows = [_invoice_to_row(inv) for inv in invoices]
         new_rows = pd.DataFrame(rows)
         self._df = pd.concat([self._df, new_rows], ignore_index=True)
+
+    def update_invoice(self, file_path: str, fields: dict) -> None:
+        """Apply edited field values to the row identified by file_path."""
+        mask = self._df["file_path"] == file_path
+        if not mask.any():
+            return
+        idx = self._df.index[mask][0]
+        for key, value in fields.items():
+            if key in self._df.columns:
+                self._df.at[idx, key] = value
 
     def remove_invoice(self, file_path: str) -> None:
         self._df = self._df[self._df["file_path"] != file_path].reset_index(drop=True)

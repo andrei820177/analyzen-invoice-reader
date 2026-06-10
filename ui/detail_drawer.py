@@ -1,0 +1,297 @@
+"""
+Slide-in detail drawer for reviewing and correcting a single invoice.
+
+Mirrors the .drawer / .field / .conf / .inp concept in design/reference.html:
+each editable field carries a confidence badge (flagged "low" when the value
+is missing), invoice flags are shown as badges, and Save emits the edited
+values back to the data layer.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from typing import Optional
+
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import (
+    QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit,
+    QPushButton, QScrollArea, QVBoxLayout, QWidget,
+)
+from ui.lang import L
+
+_INK     = "#2e3552"
+_MUTED   = "#6b7291"
+_FAINT   = "#939ab0"
+_LINE    = "#e3e5ec"
+_SURFACE = "#fefefe"
+_ACCENT  = "#2f8f6b"
+
+_CURRENCIES = ["RON", "EUR", "USD", "GBP", "CHF", "PLN", "CZK", "HUF",
+               "SEK", "NOK", "DKK", "CAD", "JPY", "RUB"]
+
+_INP = (
+    "QLineEdit,QComboBox{"
+    "background:#fefefe;border:1px solid #e3e5ec;border-radius:8px;"
+    "padding:6px 9px;font-size:13px;color:#2e3552;}"
+    "QLineEdit:focus,QComboBox:focus{border-color:#2f8f6b;}"
+    "QComboBox::drop-down{border:none;}"
+    "QComboBox QAbstractItemView{background:#fefefe;color:#2e3552;"
+    "border:1px solid #e3e5ec;selection-background-color:rgba(47,143,107,0.12);"
+    "selection-color:#1a6b4f;}"
+)
+
+# editable fields: (data_key, i18n_label_key, kind)
+_FIELDS = [
+    ("supplier_name",  "col_supplier",   "text"),
+    ("supplier_cui",   "label_cui",      "text"),
+    ("invoice_number", "col_invoice_no", "text"),
+    ("issue_date",     "col_date",       "date"),
+    ("due_date",       "col_due_date",   "date"),
+    ("subtotal",       "label_subtotal", "num"),
+    ("vat_amount",     "col_vat",        "num"),
+    ("total",          "col_total",      "num"),
+    ("currency",       "col_currency",   "currency"),
+    ("category",       "col_category",   "text"),
+]
+
+# fields whose emptiness marks the row low-confidence
+_REQUIRED = {"supplier_name", "invoice_number", "issue_date", "total"}
+
+
+def _parse_date(text: str) -> Optional[date]:
+    text = (text or "").strip()
+    if not text:
+        return None
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y", "%d-%m-%Y"):
+        try:
+            from datetime import datetime
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+class DetailDrawer(QFrame):
+    saved  = pyqtSignal(dict)   # {file_path, ...edited fields...}
+    closed = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedWidth(360)
+        self.setStyleSheet(
+            f"DetailDrawer {{ background: {_SURFACE}; border-left: 1px solid {_LINE}; }}"
+        )
+        self._file_path = ""
+        self._inputs: dict[str, QWidget] = {}
+        self._badges: dict[str, QLabel] = {}
+
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        # Header
+        head = QWidget()
+        head.setStyleSheet(f"background: {_SURFACE}; border-bottom: 1px solid {_LINE};")
+        hl = QVBoxLayout(head)
+        hl.setContentsMargins(16, 14, 12, 12)
+        hl.setSpacing(2)
+
+        top = QHBoxLayout()
+        top.setContentsMargins(0, 0, 0, 0)
+        self._file_lbl = QLabel("")
+        self._file_lbl.setStyleSheet(
+            f"color: {_FAINT}; font-size: 11px; background: transparent;"
+        )
+        close_btn = QPushButton("✕")
+        close_btn.setFixedSize(26, 26)
+        close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_btn.setStyleSheet(
+            f"QPushButton {{ background: {_SURFACE}; color: {_MUTED};"
+            f" border: 1px solid {_LINE}; border-radius: 7px; font-size: 12px; }}"
+            "QPushButton:hover { background: #eeeff3; color: #2e3552; }"
+        )
+        close_btn.clicked.connect(self.closed)
+        top.addWidget(self._file_lbl)
+        top.addStretch()
+        top.addWidget(close_btn)
+        hl.addLayout(top)
+
+        self._vendor_lbl = QLabel("")
+        self._vendor_lbl.setStyleSheet(
+            f"color: {_INK}; font-size: 17px; font-weight: 800;"
+            " letter-spacing: -0.01em; background: transparent;"
+        )
+        self._vendor_lbl.setWordWrap(True)
+        hl.addWidget(self._vendor_lbl)
+
+        self._flags_row = QHBoxLayout()
+        self._flags_row.setContentsMargins(0, 6, 0, 0)
+        self._flags_row.setSpacing(5)
+        self._flags_wrap = QWidget()
+        self._flags_wrap.setStyleSheet("background: transparent;")
+        self._flags_wrap.setLayout(self._flags_row)
+        hl.addWidget(self._flags_wrap)
+
+        root.addWidget(head)
+
+        # Body (scrollable)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+        body = QWidget()
+        body.setStyleSheet("background: transparent;")
+        self._form = QVBoxLayout(body)
+        self._form.setContentsMargins(16, 14, 16, 14)
+        self._form.setSpacing(12)
+
+        for key, label_key, kind in _FIELDS:
+            self._form.addWidget(self._make_field(key, label_key, kind))
+        self._form.addStretch()
+
+        scroll.setWidget(body)
+        root.addWidget(scroll, 1)
+
+        # Footer / save
+        footer = QWidget()
+        footer.setStyleSheet(f"background: {_SURFACE}; border-top: 1px solid {_LINE};")
+        fl = QHBoxLayout(footer)
+        fl.setContentsMargins(16, 10, 16, 12)
+        self._save_btn = QPushButton(L().t("btn_save_changes"))
+        self._save_btn.setFixedHeight(36)
+        self._save_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._save_btn.setStyleSheet(
+            f"QPushButton {{ background: {_ACCENT}; color: white; border: none;"
+            " border-radius: 8px; font-size: 13px; font-weight: 700; }}"
+            "QPushButton:hover { background: #1e7558; }"
+        )
+        self._save_btn.clicked.connect(self._on_save)
+        fl.addWidget(self._save_btn)
+        root.addWidget(footer)
+
+    def _make_field(self, key: str, label_key: str, kind: str) -> QWidget:
+        wrap = QWidget()
+        wrap.setStyleSheet("background: transparent;")
+        v = QVBoxLayout(wrap)
+        v.setContentsMargins(0, 0, 0, 0)
+        v.setSpacing(5)
+
+        lab_row = QHBoxLayout()
+        lab_row.setContentsMargins(0, 0, 0, 0)
+        lab = QLabel(L().t(label_key).upper())
+        lab.setStyleSheet(
+            f"color: {_MUTED}; font-size: 11px; font-weight: 700;"
+            " letter-spacing: 0.03em; background: transparent;"
+        )
+        badge = QLabel("")
+        badge.setStyleSheet("background: transparent;")
+        self._badges[key] = badge
+        lab_row.addWidget(lab)
+        lab_row.addStretch()
+        lab_row.addWidget(badge)
+        v.addLayout(lab_row)
+
+        if kind == "currency":
+            inp = QComboBox()
+            inp.addItems(_CURRENCIES)
+            inp.setStyleSheet(_INP)
+        else:
+            inp = QLineEdit()
+            inp.setStyleSheet(_INP)
+            if kind == "date":
+                inp.setPlaceholderText("YYYY-MM-DD")
+        self._inputs[key] = inp
+        v.addWidget(inp)
+        return wrap
+
+    # ------------------------------------------------------------------
+
+    def load(self, row: dict) -> None:
+        self._file_path = str(row.get("file_path", ""))
+        self._file_lbl.setText(str(row.get("file_name", "")))
+        self._vendor_lbl.setText(str(row.get("supplier_name") or L().t("unknown_supplier")))
+
+        for key, _label, kind in _FIELDS:
+            val = row.get(key)
+            widget = self._inputs[key]
+            text = self._fmt(val, kind)
+            if isinstance(widget, QComboBox):
+                i = widget.findText(text or "RON")
+                widget.setCurrentIndex(i if i >= 0 else 0)
+            else:
+                widget.setText(text)
+            self._set_badge(key, val, row)
+
+        self._render_flags(row)
+
+    def _fmt(self, val, kind: str) -> str:
+        if val is None or val == "":
+            return ""
+        if kind == "num":
+            try:
+                return f"{float(val):.2f}"
+            except (TypeError, ValueError):
+                return str(val)
+        if kind == "date":
+            return "" if val is None else str(val)
+        return str(val)
+
+    def _set_badge(self, key: str, val, row: dict) -> None:
+        badge = self._badges[key]
+        empty = val is None or val == "" or (key in {"total"} and not val)
+        if key in _REQUIRED and empty:
+            badge.setText(L().t("conf_low"))
+            badge.setStyleSheet(
+                "background: #f9f0dd; color: #8a6d1a; font-size: 9px;"
+                " font-weight: 700; padding: 1px 6px; border-radius: 5px;"
+            )
+        else:
+            badge.setText("")
+            badge.setStyleSheet("background: transparent;")
+
+    def _render_flags(self, row: dict) -> None:
+        while self._flags_row.count():
+            item = self._flags_row.takeAt(0)
+            w = item.widget()
+            if w:
+                w.deleteLater()
+        flags = []
+        if row.get("is_duplicate"):
+            flags.append((L().t("flag_duplicate"), "#faeae7", "#b3261e"))
+        if row.get("is_outlier"):
+            flags.append((L().t("flag_outlier"), "#f9f0dd", "#8a6d1a"))
+        if row.get("is_near_due"):
+            flags.append((L().t("flag_near_due"), "#f9f0dd", "#8a6d1a"))
+        if row.get("is_scanned"):
+            flags.append((L().t("flag_scanned"), "#eef0f4", "#5d6480"))
+        for text, bg, fg in flags:
+            chip = QLabel(text)
+            chip.setStyleSheet(
+                f"background: {bg}; color: {fg}; font-size: 10px; font-weight: 700;"
+                " padding: 2px 8px; border-radius: 6px;"
+            )
+            self._flags_row.addWidget(chip)
+        self._flags_row.addStretch()
+        self._flags_wrap.setVisible(bool(flags))
+
+    def _on_save(self) -> None:
+        if not self._file_path:
+            return
+        out: dict = {"file_path": self._file_path}
+        for key, _label, kind in _FIELDS:
+            widget = self._inputs[key]
+            raw = widget.currentText() if isinstance(widget, QComboBox) else widget.text()
+            raw = raw.strip()
+            if kind == "num":
+                try:
+                    out[key] = float(raw.replace(",", ".")) if raw else 0.0
+                except ValueError:
+                    out[key] = 0.0
+            elif kind == "date":
+                out[key] = _parse_date(raw)
+            else:
+                out[key] = raw
+        self.saved.emit(out)
+
+    def retranslate(self) -> None:
+        self._save_btn.setText(L().t("btn_save_changes"))

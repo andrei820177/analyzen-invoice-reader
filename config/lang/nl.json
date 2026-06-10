@@ -59,5 +59,15 @@
   "export_email": "Rapport per e-mail sturen",
   "no_invoices": "Geen facturen verwerkt",
   "confirm_clear": "Alle facturen uit de lijst verwijderen?",
-  "col_currency": "Valuta"
+  "col_currency": "Valuta",
+  "btn_save_changes": "Wijzigingen opslaan",
+  "unknown_supplier": "Onbekende leverancier",
+  "conf_low": "laag",
+  "label_cui": "BTW-nr",
+  "label_subtotal": "Subtotaal",
+  "side_total": "Totaal",
+  "status_valid": "Geldig",
+  "status_warning": "Let op",
+  "status_error": "Fout",
+  "col_status": "Status"
 }

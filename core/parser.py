@@ -142,8 +142,10 @@ def _extract_amount_after_keyword(text: str, keywords: List[str],
     """Find the first reasonable amount appearing after any of the keywords."""
     for kw in keywords:
         pat = re.compile(
-            re.escape(kw)
-            + r'[\s:.\-|]*'           # separator between keyword and amount
+            r'\b'                     # avoid matching inside longer words (e.g. "Subtotal")
+            + re.escape(kw)
+            # separator: punctuation/space, optionally a currency token, more space
+            + r'[\s:.\-|]*(?:(?:RON|LEI|EUR|USD|GBP)\b[\s:.\-|]*)?'
             + r'([0-9][0-9 .,]{0,20})',
             re.IGNORECASE,
         )
@@ -356,9 +358,59 @@ def _extract_vat_rate(text: str) -> float:
 # Line items
 # ---------------------------------------------------------------------------
 
-def _parse_table_row(row: List) -> Optional[Dict[str, Any]]:
+# Header keywords used to map table columns to fields (multi-language).
+_COL_PATTERNS = {
+    "description": [r'denumire', r'descriere', r'produs', r'serviciu',
+                    r'specifica', r'articol', r'description', r'désignation',
+                    r'designation', r'descrizione'],
+    "quantity":   [r'cantitate', r'\bcant\b', r'\bbuc\b', r'\bqty\b',
+                   r'quantity', r'quantité', r'quantita', r'\bu\.?m\.?\b'],
+    "unit_price": [r'pre[tţț]\s*unitar', r'unit\s*price', r'prix\s*unitaire',
+                   r'prezzo\s*unit', r'\bp\.?u\.?\b', r'pre[tţț]'],
+    "total":      [r'valoare', r'\btotal\b', r'amount', r'montant',
+                   r'importo', r'sum[aă]'],
+}
+
+
+def _map_table_columns(header: List) -> Dict[str, int]:
+    """Map field name -> column index using header text. Empty if no header match."""
+    mapping: Dict[str, int] = {}
+    cells = [str(c or "").lower() for c in header]
+    for key, pats in _COL_PATTERNS.items():
+        for idx, cell in enumerate(cells):
+            if any(re.search(p, cell) for p in pats):
+                mapping[key] = idx  # for "total", last match wins (rightmost value col)
+                if key != "total":
+                    break
+    return mapping
+
+
+def _cell_amount(row: List, idx: Optional[int]) -> Optional[float]:
+    if idx is None or idx < 0 or idx >= len(row) or row[idx] is None:
+        return None
+    return _parse_amount(str(row[idx]))
+
+
+def _parse_table_row(row: List, colmap: Optional[Dict[str, int]] = None) -> Optional[Dict[str, Any]]:
     if not row or len(row) < 3:
         return None
+
+    # Preferred path: header-driven column mapping
+    if colmap and "description" in colmap and "total" in colmap:
+        try:
+            desc = str(row[colmap["description"]] or "").strip()
+            total = _cell_amount(row, colmap["total"])
+            qty = _cell_amount(row, colmap.get("quantity"))
+            unit_price = _cell_amount(row, colmap.get("unit_price"))
+            if desc and total is not None and _is_reasonable(total) and total > 0:
+                return {"description": desc,
+                        "quantity": qty if qty and qty > 0 else 1.0,
+                        "unit_price": unit_price if unit_price and unit_price > 0 else 0.0,
+                        "total": total}
+        except Exception:
+            pass  # fall through to positional heuristic
+
+    # Fallback: rightmost numeric is total, next is unit price, next is qty
     try:
         numeric_vals = []
         for cell in reversed(row):
@@ -388,14 +440,9 @@ def _parse_table_row(row: List) -> Optional[Dict[str, Any]]:
 
 def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]:
     errors: List[str] = []
-    fields_extracted = 0
-    total_fields = 9
 
     def _track(val, name: str):
-        nonlocal fields_extracted
-        if val:
-            fields_extracted += 1
-        else:
+        if not val:
             errors.append(f"Could not extract: {name}")
         return val
 
@@ -457,9 +504,7 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
     if not total_reliable and total:
         errors.append("total: extracted via fallback — verify manually")
 
-    if total:
-        fields_extracted += 1
-    else:
+    if not total:
         errors.append("Could not extract: total")
 
     # Derive missing values arithmetically
@@ -486,12 +531,19 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
         for table in tables:
             if not table:
                 continue
+            colmap = _map_table_columns(table[0])
             for row in table[1:]:
-                item = _parse_table_row(row)
+                item = _parse_table_row(row, colmap)
                 if item:
                     line_items.append(item)
 
-    confidence = round(fields_extracted / total_fields, 2)
+    # Confidence = fraction of core fields actually extracted.
+    # iban and due_date are legitimately absent on many invoices, so they
+    # are excluded from the score to avoid penalising valid documents.
+    core_fields = [supplier_name, supplier_cui, invoice_number,
+                   issue_date, subtotal, vat_amount, total]
+    fields_extracted = sum(1 for f in core_fields if f)
+    confidence = round(fields_extracted / len(core_fields), 2)
 
     return {
         "supplier_name":  supplier_name or "",

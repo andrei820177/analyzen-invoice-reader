@@ -87,14 +87,16 @@ class InvoiceDataFrame:
         outliers: bool = False,
         near_due: bool = False,
     ) -> pd.DataFrame:
-        df = self._df
+        if not (duplicates or outliers or near_due):
+            return self._df.copy()
+        mask = pd.Series([False] * len(self._df), index=self._df.index)
         if duplicates:
-            df = df[df["is_duplicate"]]
+            mask = mask | self._df["is_duplicate"]
         if outliers:
-            df = df[df["is_outlier"]]
+            mask = mask | self._df["is_outlier"]
         if near_due:
-            df = df[df["is_near_due"]]
-        return df.copy()
+            mask = mask | self._df["is_near_due"]
+        return self._df[mask].copy()
 
     def search(self, query: str) -> pd.DataFrame:
         q = query.lower()

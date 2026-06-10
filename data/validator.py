@@ -24,8 +24,13 @@ def validate_batch(invoices: List[Invoice]) -> List[Invoice]:
 def _check_duplicates(invoices: List[Invoice]) -> None:
     seen: dict = {}
     for inv in invoices:
-        key = (inv.invoice_number.strip().lower(), inv.supplier_cui.strip().lower())
-        if key[0] and key in seen:
+        inv_num = inv.invoice_number.strip().lower()
+        cui = inv.supplier_cui.strip().lower()
+        # Skip invoices where neither field can serve as an identifier
+        if not inv_num and not cui:
+            continue
+        key = (inv_num, cui)
+        if key in seen:
             inv.is_duplicate = True
             seen[key].is_duplicate = True
         else:
@@ -37,7 +42,7 @@ def _check_outliers(invoices: List[Invoice], multiplier: float) -> None:
     if len(totals) < 3:
         return
     mean = sum(totals) / len(totals)
-    variance = sum((t - mean) ** 2 for t in totals) / len(totals)
+    variance = sum((t - mean) ** 2 for t in totals) / (len(totals) - 1)  # sample variance (Bessel's correction)
     std_dev = variance ** 0.5
     threshold = mean + multiplier * std_dev
     for inv in invoices:

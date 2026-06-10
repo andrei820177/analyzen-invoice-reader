@@ -57,7 +57,7 @@ def _preprocess_image(img):
     img = img.convert("L")  # grayscale
     img = ImageOps.autocontrast(img, cutoff=1)
     img = ImageEnhance.Sharpness(img).enhance(2.0)
-    img = img.filter(ImageFilter.MedianFilter(size=1))
+    img = img.filter(ImageFilter.MedianFilter(size=3))
     return img
 
 

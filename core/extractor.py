@@ -29,10 +29,6 @@ def extract_invoice(file_path: str) -> Invoice:
 
     try:
         with pdfplumber.open(file_path) as pdf:
-            if pdf.pages and pdf.pages[0].extract_text() is None:
-                # Encrypted / corrupted
-                raise ValueError("PDF appears to be encrypted or corrupted")
-
             is_text = _is_text_pdf(pdf.pages)
 
             if is_text:

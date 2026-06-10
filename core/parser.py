@@ -142,7 +142,7 @@ def _extract_amount_after_keyword(text: str, keywords: List[str],
     """Find the first reasonable amount appearing after any of the keywords."""
     for kw in keywords:
         pat = re.compile(
-            re.escape(kw)
+            r'\b' + re.escape(kw)
             + r'[\s:.\-|]*'           # separator between keyword and amount
             + r'([0-9][0-9 .,]{0,20})',
             re.IGNORECASE,
@@ -314,7 +314,7 @@ def _extract_cui(text: str) -> str:
 
 
 def _extract_iban(text: str) -> str:
-    m = re.search(r'\b(RO\d{2}[A-Z0-9]{18,22})\b', text, re.IGNORECASE)
+    m = re.search(r'\b(RO\d{2}[A-Z0-9]{20})\b', text, re.IGNORECASE)
     return m.group(1).upper().replace(" ", "") if m else ""
 
 
@@ -401,7 +401,7 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
 
     supplier_name  = _track(_extract_supplier_name(raw_text), "supplier_name")
     supplier_cui   = _track(_extract_cui(raw_text), "supplier_cui")
-    supplier_iban  = _extract_iban(raw_text)
+    supplier_iban  = _track(_extract_iban(raw_text), "supplier_iban")
 
     invoice_number = _track(_extract_invoice_number(raw_text), "invoice_number")
     currency       = _extract_currency(raw_text)
@@ -426,7 +426,7 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
         "issue_date",
     )
 
-    due_date = _extract_date_near_keywords(raw_text, [
+    due_date = _track(_extract_date_near_keywords(raw_text, [
         # Romanian
         "Scadenta:", "Termen plata:", "Termen de plata:", "Due date:",
         "Data scadentei:", "Scadent la:", "Data scadenta:", "Termen scadenta",
@@ -436,7 +436,7 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
         "Data scadenza:", "Scadenza:", "Pagamento entro:",
         # German
         "Fälligkeitsdatum:", "Zahlungsziel:", "Fällig am:",
-    ])
+    ]), "due_date")
 
     subtotal = _extract_amount_after_keyword(raw_text, _SUBTOTAL_KEYWORDS)
     vat_amount = _extract_amount_after_keyword(raw_text, _VAT_KEYWORDS)
@@ -451,6 +451,16 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
     if vat_amount and subtotal and vat_amount > subtotal * 0.5:
         logger.warning("Discarding implausible VAT amount: %.2f (subtotal: %.2f)", vat_amount, subtotal)
         vat_amount = None
+
+    # Track directly-extracted amounts before arithmetic derivation fills gaps
+    if subtotal:
+        fields_extracted += 1
+    else:
+        errors.append("Could not extract: subtotal")
+    if vat_amount:
+        fields_extracted += 1
+    else:
+        errors.append("Could not extract: vat_amount")
 
     total, total_reliable = _find_total(raw_text, subtotal, vat_amount)
 

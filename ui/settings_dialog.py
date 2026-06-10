@@ -7,6 +7,7 @@ from PyQt6.QtWidgets import (
     QSpinBox, QDoubleSpinBox, QTabWidget, QVBoxLayout, QWidget,
 )
 from core.currency import SOURCE_LABELS
+from ui.components.widgets import NoScrollComboBox
 
 _SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "settings.json")
 
@@ -90,7 +91,7 @@ class SettingsDialog(QDialog):
         root.addWidget(buttons)
 
     def _combo(self, items: list, current: str) -> QComboBox:
-        c = QComboBox()
+        c = NoScrollComboBox()
         c.setStyleSheet(_INPUT_STYLE)
         for item in items:
             c.addItem(item)
@@ -153,7 +154,7 @@ class SettingsDialog(QDialog):
         form.addRow("Moneda de baza:", self._base_currency)
 
         # Source combo shows display labels; data stored as keys
-        self._fx_source = QComboBox()
+        self._fx_source = NoScrollComboBox()
         self._fx_source.setStyleSheet(_INPUT_STYLE)
         current_src = self._settings.get("fx_source", "BNR")
         for key, label in SOURCE_LABELS.items():

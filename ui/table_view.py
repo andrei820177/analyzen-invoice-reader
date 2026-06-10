@@ -406,6 +406,7 @@ class InvoiceTableView(QWidget):
 
         self._search.textChanged.connect(self._proxy.setFilterFixedString)
         self._table.selectionModel().selectionChanged.connect(self._on_selection)
+        self._table.doubleClicked.connect(self._on_double_click)
 
         self._full_df: pd.DataFrame = pd.DataFrame()
 
@@ -446,10 +447,17 @@ class InvoiceTableView(QWidget):
         indexes = self._table.selectionModel().selectedRows()
         if indexes:
             src = self._proxy.mapToSource(indexes[0])
-            row = self._model.get_row_data(src.row())
-            self.selection_changed.emit(row)
-            self._drawer.load(row)
-            self._drawer.setVisible(True)
+            self.selection_changed.emit(self._model.get_row_data(src.row()))
+
+    def _on_double_click(self, index) -> None:
+        # open the review drawer only on double-click
+        src = self._proxy.mapToSource(index)
+        row = self._model.get_row_data(src.row())
+        if not row:
+            return
+        self.selection_changed.emit(row)
+        self._drawer.load(row)
+        self._drawer.setVisible(True)
 
     def _close_drawer(self) -> None:
         self._drawer.setVisible(False)

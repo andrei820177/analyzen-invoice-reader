@@ -17,6 +17,7 @@ from PyQt6.QtWidgets import (
     QComboBox, QFrame, QHBoxLayout, QLabel, QLineEdit,
     QPushButton, QScrollArea, QVBoxLayout, QWidget,
 )
+from ui.components.widgets import NoScrollComboBox
 from ui.lang import L
 
 _INK     = "#2e3552"
@@ -192,7 +193,7 @@ class DetailDrawer(QFrame):
         v.addLayout(lab_row)
 
         if kind == "currency":
-            inp = QComboBox()
+            inp = NoScrollComboBox()
             inp.addItems(_CURRENCIES)
             inp.setStyleSheet(_INP)
         else:

@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# PyInstaller
+*.spec.bak
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.user
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# App data / secrets
+config/settings.json
+
+# Logs
+*.log
+
+# Tesseract binaries (large, bundled separately)
+tools/tesseract/
+
+# Test outputs
+*.xlsx
+*.pdf
+!design/*.pdf

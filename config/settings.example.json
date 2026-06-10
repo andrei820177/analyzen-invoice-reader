@@ -1,0 +1,16 @@
+{
+  "watch_folder": "",
+  "auto_watch": false,
+  "due_date_alert_days": 7,
+  "outlier_std_dev_multiplier": 2.0,
+  "tesseract_path": "",
+  "language": "ro",
+  "smtp_host": "",
+  "smtp_port": 587,
+  "smtp_user": "",
+  "smtp_pass": "",
+  "smtp_from": "",
+  "smtp_to": "",
+  "max_workers": 0,
+  "confidence_threshold": 0.6
+}

@@ -1,0 +1,278 @@
+PROJECT STRUCTURE
+----------------------------------------------------------------
+ 
+analyzen-invoice-reader/
+├── main.py
+├── requirements.txt
+├── build.spec                        (PyInstaller config)
+├── core/
+│   ├── __init__.py
+│   ├── extractor.py                  (PDF text extraction)
+│   ├── ocr.py                        (OCR for scanned PDFs)
+│   ├── parser.py                     (field parsing / regex)
+│   ├── classifier.py                 (auto-categorization)
+│   └── watcher.py                    (folder monitoring)
+├── data/
+│   ├── __init__.py
+│   ├── processor.py                  (pandas data handling)
+│   ├── validator.py                  (duplicate / outlier detection)
+│   └── models.py                     (Invoice dataclass)
+├── ui/
+│   ├── __init__.py
+│   ├── main_window.py                (main app window)
+│   ├── dashboard.py                  (charts & stats)
+│   ├── table_view.py                 (interactive invoice table)
+│   ├── log_panel.py                  (live processing log)
+│   ├── settings_dialog.py            (settings panel)
+│   └── components/
+│       ├── __init__.py
+│       ├── sidebar.py
+│       ├── progress_bar.py
+│       ├── flag_badge.py
+│       └── language_toggle.py
+├── export/
+│   ├── __init__.py
+│   ├── excel_exporter.py             (Excel multi-sheet)
+│   ├── pdf_reporter.py               (PDF summary report)
+│   └── email_sender.py              (SMTP email report)
+└── config/
+    ├── settings.json
+    └── lang/
+        ├── en.json
+        └── ro.json
+ 
+----------------------------------------------------------------
+2. DEPENDENCIES (requirements.txt)
+----------------------------------------------------------------
+ 
+pdfplumber==0.10.3
+pytesseract==0.3.10
+Pillow==10.2.0
+spacy==3.7.2
+pandas==2.2.0
+watchdog==4.0.0
+PyQt6==6.6.1
+pyqtgraph==0.13.4
+openpyxl==3.1.2
+reportlab==4.1.0
+PyInstaller==6.4.0
+ 
+----------------------------------------------------------------
+3. DATA MODEL (models.py)
+----------------------------------------------------------------
+ 
+@dataclass
+class Invoice:
+    file_path: str
+    file_name: str
+ 
+    # Extracted fields
+    supplier_name: str
+    supplier_cui: str
+    supplier_iban: str
+ 
+    invoice_number: str
+    issue_date: date
+    due_date: date
+ 
+    subtotal: float
+    vat_amount: float
+    vat_rate: float
+    total: float
+    currency: str
+ 
+    category: str                     (auto-classified)
+    line_items: list[LineItem]
+ 
+    # Quality fields
+    confidence_score: float           (0.0 - 1.0)
+    is_scanned: bool
+    is_duplicate: bool
+    is_outlier: bool
+    is_near_due: bool
+    parse_errors: list[str]
+ 
+    processed_at: datetime
+ 
+@dataclass
+class LineItem:
+    description: str
+    quantity: float
+    unit_price: float
+    total: float
+ 
+----------------------------------------------------------------
+4. CORE — EXTRACTOR (extractor.py)
+----------------------------------------------------------------
+ 
+FUNCTION: extract_invoice(file_path: str) -> Invoice
+ 
+LOGIC:
+  1. Open PDF with pdfplumber
+  2. Check if text-extractable:
+     - YES → extract text directly per page
+     - NO  → flag as scanned → send to ocr.py
+  3. Concatenate all page text
+  4. Send raw text to parser.py
+  5. Return populated Invoice object
+ 
+HANDLES:
+  - Multi-page invoices
+  - Password-protected PDFs (skip + error log)
+  - Corrupted PDFs (skip + error log)
+  - Empty PDFs (skip + error log)
+ 
+PARALLEL PROCESSING:
+  - concurrent.futures.ThreadPoolExecutor
+  - Max workers: CPU count - 1
+  - Progress callback per file completed
+ 
+----------------------------------------------------------------
+5. CORE — OCR (ocr.py)
+----------------------------------------------------------------
+ 
+FUNCTION: ocr_pdf(file_path: str) -> str
+ 
+LOGIC:
+  1. Convert PDF pages to images (pdf2image / Pillow)
+  2. Preprocess image:
+     - Grayscale
+     - Denoise
+     - Deskew
+     - Increase contrast
+  3. Run pytesseract with lang=ron+eng
+  4. Return concatenated text
+ 
+REQUIREMENTS:
+  - Tesseract OCR installed (Windows .exe)
+  - Romanian + English language packs
+  - tesseract path auto-detected from Windows registry
+ 
+----------------------------------------------------------------
+6. CORE — PARSER (parser.py)
+----------------------------------------------------------------
+ 
+FUNCTION: parse_fields(raw_text: str) -> dict
+ 
+FIELDS EXTRACTED:
+ 
+  supplier_name:
+    - Regex patterns for Romanian invoice format
+    - "Furnizor:", "Emitent:", "S.C.", "S.R.L.", "S.A."
+    - Fallback: first capitalized multi-word on page 1
+ 
+  supplier_cui:
+    - Pattern: "CUI" or "CIF" followed by RO + 8-10 digits
+ 
+  supplier_iban:
+    - Pattern: IBAN format RO + 22 chars
+ 
+  invoice_number:
+    - Pattern: "Factura nr.", "Invoice No.", "Nr. factura"
+    - Followed by alphanumeric sequence
+ 
+  issue_date:
+    - Multiple date formats: DD.MM.YYYY, DD/MM/YYYY, YYYY-MM-DD
+    - Keywords: "Data:", "Emisa la:", "Issue date:"
+ 
+  due_date:
+    - Keywords: "Scadenta:", "Termen plata:", "Due date:"
+ 
+  subtotal:
+    - Keywords: "Subtotal", "Baza impozabila", "Net amount"
+ 
+  vat_rate + vat_amount:
+    - Pattern: "TVA 19%", "VAT 20%", followed by amount
+ 
+  total:
+    - Keywords: "Total de plata", "Total amount", "TOTAL"
+    - Largest monetary value as fallback
+ 
+  currency:
+    - Pattern: RON, EUR, USD, GBP symbols or text
+    - Default: RON if not found
+ 
+  line_items:
+    - Table detection via pdfplumber table extractor
+    - Columns: description, qty, unit price, total
+ 
+CONFIDENCE SCORING:
+  - Each field scores 0 or 1 based on extraction success
+  - Overall confidence = fields_extracted / total_fields
+  - Score < 0.6 → flag for manual review
+ 
+----------------------------------------------------------------
+7. CORE — CLASSIFIER (classifier.py)
+----------------------------------------------------------------
+ 
+FUNCTION: classify_invoice(invoice: Invoice) -> str
+ 
+CATEGORIES:
+  - Utilities      (keywords: curent, gaz, apa, energie, EON, E.ON, Electrica)
+  - Software       (keywords: license, subscription, SaaS, software)
+  - Services       (keywords: consultanta, servicii, prestari)
+  - Products       (keywords: produse, marfuri, bunuri)
+  - Transport      (keywords: transport, curierat, livrare, DHL, FanCourier)
+  - Marketing      (keywords: publicitate, reclama, marketing, Google, Meta)
+  - Office         (keywords: birotica, papetarie, consumabile)
+  - Other          (fallback)
+ 
+LOGIC:
+  - Keyword matching on supplier_name + line_items descriptions
+  - Returns highest-confidence category match
+ 
+----------------------------------------------------------------
+8. CORE — WATCHER (watcher.py)
+----------------------------------------------------------------
+ 
+FUNCTION: start_watching(folder_path: str, callback: callable)
+ 
+LOGIC:
+  - watchdog FileSystemEventHandler
+  - Monitors for .pdf file creation / modification
+  - Debounce: 2 seconds (avoid partial file reads)
+  - On new PDF detected → callback(file_path)
+  - Runs in background thread
+  - Stop/start via UI toggle
+ 
+----------------------------------------------------------------
+9. DATA — VALIDATOR (validator.py)
+----------------------------------------------------------------
+ 
+DUPLICATE DETECTION:
+  - Check invoice_number + supplier_cui combination
+  - If match found → flag is_duplicate = True
+  - Warning shown in UI + log
+ 
+OUTLIER DETECTION:
+  - Calculate mean + std dev of all invoice totals
+  - Flag if total > mean + (2 * std_dev)
+  - Configurable threshold in settings
+ 
+DUE DATE ALERTING:
+  - Flag if due_date within next N days (default: 7)
+  - Configurable in settings
+ 
+----------------------------------------------------------------
+10. DATA — PROCESSOR (processor.py)
+----------------------------------------------------------------
+ 
+InvoiceDataFrame: pandas DataFrame wrapper
+ 
+METHODS:
+  add_invoice(invoice)
+  remove_invoice(file_path)
+  get_all() -> DataFrame
+  filter_by_date(start, end) -> DataFrame
+  filter_by_supplier(name) -> DataFrame
+  filter_by_category(cat) -> DataFrame
+  filter_by_flags(duplicates, outliers, near_due) -> DataFrame
+  search(query: str) -> DataFrame           (searches all text fields)
+  get_summary() -> dict:
+    - total_invoices
+    - total_value
+    - total_vat
+    - per_supplier (top 10)
+    - per_category
+    - per_month
+    - flagged_count

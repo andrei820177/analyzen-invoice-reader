@@ -402,10 +402,11 @@ _ISSUE_DATE_KW = re.compile(_kw([
 _DUE_DATE_KW = re.compile(_kw([
     r'scaden\w*', r'dat[aăn]\s+scaden\w*',
     r'termen\s+(?:de\s+)?plat[aăn]*', r'\btermen\b', r'scadent\s+la',
-    r'due\s+date', r'payment\s+due', r'pay\s+by', r'due\s+by',
-    r"date\s+d.[ée]ch[ée]ance", r'[ée]ch[ée]ance', r'date\s+limite\s+de\s+paiement',
+    r'due\s+date', r'payment\s+due', r'pay\s+by', r'due\s+by', r'\bdue\b',
+    r'payment\s+terms', r'terms\s+of\s+payment',
+    r"date\s+d.[ée]ch[ée]ance", r'[ée]ch[ée]ance', r'date\s+limite(?:\s+de(?:\s+paiement)?)?',
     r'data\s+scadenza', r'scadenza', r'pagamento\s+entro',
-    r'f[aä]lligkeitsdatum', r'f[aä]llig\s+am', r'zahlungsziel', r'zahlbar\s+bis',
+    r'f[aä]llig\w*', r'zahlungsziel', r'zahlbar\s+bis',
     r'fecha\s+de\s+vencimiento', r'vencimiento',
     r'termin\s+p[lł]atno[sś]ci',
     r'vervaldatum',
@@ -511,15 +512,37 @@ def _extract_supplier_name(lines: List[str]) -> str:
     return ""
 
 
-def _extract_cui(text: str) -> str:
-    m = re.search(
-        r'(?:CUI|CIF|C\.U\.I\.|C\.I\.F\.)\s*[:\-]?\s*(RO\s*)?(\d{6,10})',
-        text, re.IGNORECASE,
-    )
-    if m:
-        prefix = "RO" if m.group(1) else ""
-        return prefix + m.group(2).replace(" ", "")
-    m = re.search(r'\b(RO\d{6,10})\b(?!\d)', text)
+# Tax-ID labels across languages (CUI/CIF, VAT No, USt-IdNr, P.IVA, NIF, SIRET...)
+_TAXID_LABEL = re.compile(
+    r'(?:C\.?U\.?I\.?|C\.?I\.?F\.?|cod\s+fiscal|cod\s+unic'
+    r'|VAT\s*(?:no|number|reg\w*|registration)?|(?:N[°º]\.?\s*)?TVA(?:\s*intracomm\w*)?'
+    r'|USt-?\s?Id\.?-?Nr|USt-?\s?ID|Steuernummer|Steuer-?Nr'
+    r'|P\.?\s*IVA|Partita\s*IVA'
+    r'|N[°º]?\s*SIRET|SIRET|NIF(?:\s*/\s*CIF)?|N\.?I\.?F\.?'
+    r'|Tax\s*(?:ID|No|Number|Reg\w*)|\bABN\b|\bEIN\b|\bNIP\b)'
+    r'[\s:.\-]*',
+    re.IGNORECASE,
+)
+# A tax-id value: optional 2-letter country prefix (maybe one space) then the
+# alphanumeric body. No runs of whitespace, so trailing label words aren't eaten.
+_TAXID_VALUE = re.compile(
+    r'((?:[A-Z]{2}\s?)?[A-Z]?-?\d[\dA-Z\-]{4,16})', re.IGNORECASE)
+
+
+def _extract_cui(lines: List[str]) -> str:
+    """First tax id in the document (the supplier's, printed in the header)."""
+    for line in lines:
+        m = _TAXID_LABEL.search(line)
+        if not m:
+            continue
+        tm = _TAXID_VALUE.match(line[m.end():])
+        if not tm:
+            continue
+        val = re.sub(r'\s+', '', tm.group(1)).rstrip('.,;-').upper()
+        if sum(c.isdigit() for c in val) >= 5:
+            return val
+    # fallback: a bare Romanian CUI anywhere (not an IBAN)
+    m = re.search(r'\b(RO\d{6,10})\b(?!\d)', "\n".join(lines))
     if m and not re.search(r'\bRO\d{2}[A-Z]{4}', m.group(1)):
         return m.group(1)
     return ""
@@ -530,40 +553,71 @@ def _extract_iban(text: str) -> str:
     return m.group(1).upper() if m else ""
 
 
-_INVNO_KW = re.compile(
-    r'(?:Factur[aă]\s+(?:fiscal[aă]\s+)?(?:nr|num[aă]r)\.?|Nr\.?\s+factur[aă]'
-    r'|Seri[ae]\s+\w{1,6}\s*,?\s*(?:nr|num[aă]r)\.?'
-    r'|Invoice\s*(?:no|number|#)\.?|Facture\s+(?:n[o°]|num[ée]ro)\.?'
-    r'|Fattura\s+(?:n|nr|numero)\.?[°o]?|Rechnung(?:s-?\s?(?:nr|nummer))?\.?'
-    r'|Factura\s+(?:n[o°]|n[uú]m)\.?|Faktura\s+(?:nr|VAT)\.?'
-    r'|Factuurnummer)\s*[:\-]?\s*([A-Z0-9][A-Z0-9\-/ ]{1,24})',
+# Invoice-number labels. Matched per line; the value is captured on the SAME
+# line so a bare header word (RECHNUNG/FACTURA) can't grab the next line's text.
+# Handles word-order and inflection variants and Romanian "ă -> n" mojibake.
+_INVNO_LABEL = re.compile(
+    r'(?:'
+    # Romanian: "Nr. facturii", "Factura nr", "Numar factura", "Numnr facturn"
+    r'nr\.?\s*factur\w*'
+    r'|factur\w*\s*(?:fiscal\w*\s*)?(?:nr\.?|num[aăn]r)'
+    r'|num[aăn]r\s*factur\w*'
+    # English
+    r'|invoice\s*(?:no|nr|number|#)|inv\.?\s*no\.?|receipt\s*(?:no|nr|number|#)'
+    # French
+    r'|num[ée]ro\s*(?:de\s*)?facture|r[ée]f[ée]rence\s*(?:de\s*)?facture'
+    r'|facture\s*(?:n[°ºo]\.?|num[ée]ro)|n[°ºo]\.?\s*(?:de\s*)?facture'
+    # Italian
+    r'|numero\s*(?:di\s*)?fattura|n\.?\s*fattura|fattura\s*(?:n[°.]?|numero)'
+    # German
+    r'|rechnung(?:s)?\s*-?\s*(?:nr\.?|nummer)'
+    # Spanish
+    r'|n[º°o]\.?\s*factura|n[uú]mero\s*(?:de\s*)?factura'
+    # Dutch / Polish
+    r'|factuurnummer|faktura\s*(?:nr|vat)'
+    # Generic series/number
+    r'|seri[ae]\s+\w+\s*nr\.?|\bnr\.?'
+    r')[\s:#.№\-]*',
     re.IGNORECASE,
 )
+_INVNO_TOKEN = re.compile(r'([A-Za-z0-9][A-Za-z0-9/.\-]{1,30})')
+# A well-formed structured id like RO-001-2824, EN-001-9785, used as fallback
+_INVNO_STRUCTURED = re.compile(r'\b([A-Z]{2,4}[-/]\d{2,5}[-/]\d{2,6})\b')
+
+
+def _valid_invoice_no(val: str) -> bool:
+    if not val or _parse_date(val):
+        return False
+    if not any(c.isdigit() for c in val):
+        return False
+    # accept if it has a separator or is reasonably long (rejects "1", "12")
+    return ('-' in val or '/' in val or len(val) >= 5)
 
 
 def _extract_invoice_number(lines: List[str]) -> str:
+    # 1) label-driven, same-line capture
+    for line in lines:
+        m = _INVNO_LABEL.search(line)
+        if not m:
+            continue
+        tm = _INVNO_TOKEN.match(line[m.end():])
+        if not tm:
+            continue
+        val = tm.group(1).strip().rstrip('.-/')
+        if _valid_invoice_no(val):
+            return val
+    # 2) structured id anywhere (XX-NNN-NNNN), skipping tax-id contexts
+    for line in lines:
+        if _TAXID_LABEL.search(line):
+            continue
+        sm = _INVNO_STRUCTURED.search(line)
+        if sm and not _parse_date(sm.group(1)):
+            return sm.group(1)
+    # 3) common prefixed ids
     text = "\n".join(lines)
-    m = _INVNO_KW.search(text)
-    if m:
-        val = m.group(1).strip().rstrip('-/ ')
-        # cut anything that drifts into the next label
-        val = re.split(r'\s{2,}', val)[0].strip()
-        if val and not _parse_date(val):
-            return val
-    # generic fallbacks, skipping dates, CUI and IBAN-looking strings
-    for pat in [
-        r'\b((?:FCT|FAC|INV|FF|FV)[A-Z0-9\-]{2,15})\b',
-        r'\b([A-Z]{2,4}[-/]?\d{3,8})\b',
-    ]:
-        for m in re.finditer(pat, text):
-            val = m.group(1)
-            line_start = text.rfind("\n", 0, m.start()) + 1
-            context = text[line_start:m.start()]
-            if re.search(r'cui|cif|iban|swift|cont|cod', context, re.IGNORECASE):
-                continue
-            if _parse_date(val) or re.match(r'^RO\d+$', val):
-                continue
-            return val
+    m = re.search(r'\b((?:FCT|FAC|INV|FF|FV|RE)[A-Z0-9]*[-/]?\d{2,}[A-Z0-9\-/]*)\b', text)
+    if m and not _parse_date(m.group(1)):
+        return m.group(1)
     return ""
 
 
@@ -676,7 +730,7 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
         return val
 
     supplier_name  = _track(_extract_supplier_name(lines), "supplier_name")
-    supplier_cui   = _track(_extract_cui(raw_text), "supplier_cui")
+    supplier_cui   = _track(_extract_cui(lines), "supplier_cui")
     supplier_iban  = _extract_iban(raw_text)
     invoice_number = _track(_extract_invoice_number(lines), "invoice_number")
     vat_rate       = _extract_vat_rate(raw_text)

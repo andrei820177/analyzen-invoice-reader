@@ -69,7 +69,7 @@ register_reload(_reload)
 class SettingsDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Setari")
+        self.setWindowTitle(L().t("set_title"))
         self.setMinimumWidth(500)
         self.setStyleSheet(
             f"QDialog{{background:{C('desk')};}}"
@@ -91,12 +91,12 @@ class SettingsDialog(QDialog):
               border-bottom:2px solid {C('accent')};}}
         """)
 
-        tabs.addTab(self._build_general_tab(), "General")
-        tabs.addTab(self._build_currency_tab(), "Valuta")
-        tabs.addTab(self._build_ocr_tab(), "OCR")
-        tabs.addTab(self._build_email_tab(), "Email")
-        tabs.addTab(self._build_advanced_tab(), "Avansat")
-        tabs.addTab(self._build_debug_tab(), "Debugging")
+        tabs.addTab(self._build_general_tab(), L().t("tab_general"))
+        tabs.addTab(self._build_currency_tab(), L().t("tab_currency"))
+        tabs.addTab(self._build_ocr_tab(), L().t("tab_ocr"))
+        tabs.addTab(self._build_email_tab(), L().t("tab_email"))
+        tabs.addTab(self._build_advanced_tab(), L().t("tab_advanced"))
+        tabs.addTab(self._build_debug_tab(), L().t("tab_debugging"))
         root.addWidget(tabs)
 
         buttons = QDialogButtonBox(
@@ -152,13 +152,13 @@ class SettingsDialog(QDialog):
         browse_btn.clicked.connect(self._browse_watch_folder)
         watch_row.addWidget(self._watch_folder, 1)
         watch_row.addWidget(browse_btn)
-        form.addRow("Folder monitorizat:", watch_row)
+        form.addRow(L().t("set_watch_folder"), watch_row)
 
         self._due_days = QSpinBox()
         self._due_days.setRange(1, 90)
         self._due_days.setValue(self._settings.get("due_date_alert_days", 7))
         self._due_days.setStyleSheet(_INPUT_STYLE)
-        form.addRow("Alerta scadenta (zile):", self._due_days)
+        form.addRow(L().t("set_due_alert"), self._due_days)
 
         return w
 
@@ -171,7 +171,7 @@ class SettingsDialog(QDialog):
         self._base_currency = self._combo(
             _CURRENCIES, self._settings.get("base_currency", "RON")
         )
-        form.addRow("Moneda de baza:", self._base_currency)
+        form.addRow(L().t("set_base_currency"), self._base_currency)
 
         # Source combo shows display labels; data stored as keys
         self._fx_source = NoScrollComboBox()
@@ -182,13 +182,9 @@ class SettingsDialog(QDialog):
         idx = self._fx_source.findData(current_src)
         if idx >= 0:
             self._fx_source.setCurrentIndex(idx)
-        form.addRow("Sursa curs valutar:", self._fx_source)
+        form.addRow(L().t("set_fx_source"), self._fx_source)
 
-        note = QLabel(
-            "Cursurile se actualizeaza zilnic de la banca nationala selectata.\n"
-            "Bank of England si Federal Reserve (SUA) nu ofera API public gratuit; "
-            "pentru baza GBP sau USD folositi open.er-api, care suporta orice moneda."
-        )
+        note = QLabel(L().t("set_fx_note"))
         note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
         note.setWordWrap(True)
         form.addRow("", note)
@@ -204,7 +200,7 @@ class SettingsDialog(QDialog):
         tess_row = QHBoxLayout()
         self._tesseract_path = QLineEdit(self._settings.get("tesseract_path", ""))
         self._tesseract_path.setStyleSheet(_INPUT_STYLE)
-        self._tesseract_path.setPlaceholderText("Auto-detectat daca este in PATH")
+        self._tesseract_path.setPlaceholderText(L().t("set_tesseract_ph"))
         browse_btn = QPushButton("...")
         browse_btn.setFixedWidth(36)
         browse_btn.setStyleSheet(
@@ -215,12 +211,9 @@ class SettingsDialog(QDialog):
         browse_btn.clicked.connect(self._browse_tesseract)
         tess_row.addWidget(self._tesseract_path, 1)
         tess_row.addWidget(browse_btn)
-        form.addRow("Cale Tesseract OCR:", tess_row)
+        form.addRow(L().t("set_tesseract_path"), tess_row)
 
-        note = QLabel(
-            "Tesseract OCR este necesar pentru facturile scanate.\n"
-            "Descarca de la: https://github.com/UB-Mannheim/tesseract/wiki"
-        )
+        note = QLabel(L().t("set_ocr_note"))
         note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
         note.setWordWrap(True)
         form.addRow("", note)
@@ -236,32 +229,32 @@ class SettingsDialog(QDialog):
         self._smtp_host = QLineEdit(self._settings.get("smtp_host", ""))
         self._smtp_host.setStyleSheet(_INPUT_STYLE)
         self._smtp_host.setPlaceholderText("smtp.gmail.com")
-        form.addRow("Server SMTP:", self._smtp_host)
+        form.addRow(L().t("set_smtp_host"), self._smtp_host)
 
         self._smtp_port = QSpinBox()
         self._smtp_port.setRange(1, 65535)
         self._smtp_port.setValue(self._settings.get("smtp_port", 587))
         self._smtp_port.setStyleSheet(_INPUT_STYLE)
-        form.addRow("Port SMTP:", self._smtp_port)
+        form.addRow(L().t("set_smtp_port"), self._smtp_port)
 
         self._smtp_user = QLineEdit(self._settings.get("smtp_user", ""))
         self._smtp_user.setStyleSheet(_INPUT_STYLE)
-        form.addRow("Utilizator:", self._smtp_user)
+        form.addRow(L().t("set_smtp_user"), self._smtp_user)
 
         self._smtp_pass = QLineEdit(self._settings.get("smtp_password", ""))
         self._smtp_pass.setEchoMode(QLineEdit.EchoMode.Password)
         self._smtp_pass.setStyleSheet(_INPUT_STYLE)
-        form.addRow("Parola:", self._smtp_pass)
+        form.addRow(L().t("set_smtp_pass"), self._smtp_pass)
 
         self._smtp_from = QLineEdit(self._settings.get("smtp_from", ""))
         self._smtp_from.setStyleSheet(_INPUT_STYLE)
-        form.addRow("De la (email):", self._smtp_from)
+        form.addRow(L().t("set_smtp_from"), self._smtp_from)
 
         to_list = self._settings.get("smtp_to", [])
         self._smtp_to = QLineEdit(", ".join(to_list) if isinstance(to_list, list) else to_list)
         self._smtp_to.setStyleSheet(_INPUT_STYLE)
         self._smtp_to.setPlaceholderText("email1@domain.com, email2@domain.com")
-        form.addRow("Catre (email-uri):", self._smtp_to)
+        form.addRow(L().t("set_smtp_to"), self._smtp_to)
 
         return w
 
@@ -276,7 +269,7 @@ class SettingsDialog(QDialog):
         self._outlier_mult.setSingleStep(0.5)
         self._outlier_mult.setValue(self._settings.get("outlier_std_dev_multiplier", 2.0))
         self._outlier_mult.setStyleSheet(_INPUT_STYLE)
-        form.addRow("Multiplicator deviatia standard:", self._outlier_mult)
+        form.addRow(L().t("set_outlier_mult"), self._outlier_mult)
 
         self._conf_threshold = QDoubleSpinBox()
         self._conf_threshold.setRange(0.0, 1.0)
@@ -284,7 +277,7 @@ class SettingsDialog(QDialog):
         self._conf_threshold.setDecimals(2)
         self._conf_threshold.setValue(self._settings.get("confidence_threshold", 0.6))
         self._conf_threshold.setStyleSheet(_INPUT_STYLE)
-        form.addRow("Prag incredere minima:", self._conf_threshold)
+        form.addRow(L().t("set_conf_threshold"), self._conf_threshold)
 
         return w
 
@@ -294,14 +287,11 @@ class SettingsDialog(QDialog):
         form.setContentsMargins(16, 16, 16, 16)
         form.setSpacing(12)
 
-        self._show_log = QCheckBox("Afiseaza consola de log la procesare")
+        self._show_log = QCheckBox(L().t("set_show_log"))
         self._show_log.setChecked(bool(self._settings.get("show_log", False)))
-        form.addRow("Log procesare:", self._show_log)
+        form.addRow(L().t("set_log_row"), self._show_log)
 
-        note = QLabel(
-            "Consola de log arata pasii de procesare a facturilor (uz debug).\n"
-            "Comutare rapida si din aplicatie: Ctrl+L."
-        )
+        note = QLabel(L().t("set_debug_note"))
         note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
         note.setWordWrap(True)
         form.addRow("", note)
@@ -309,13 +299,13 @@ class SettingsDialog(QDialog):
         return w
 
     def _browse_watch_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, "Selecteaza folder")
+        folder = QFileDialog.getExistingDirectory(self, L().t("set_choose_folder"))
         if folder:
             self._watch_folder.setText(folder)
 
     def _browse_tesseract(self) -> None:
         path, _ = QFileDialog.getOpenFileName(
-            self, "Selecteaza tesseract.exe", "", "Executabile (*.exe)"
+            self, L().t("set_choose_tesseract"), "", L().t("set_exe_filter")
         )
         if path:
             self._tesseract_path.setText(path)

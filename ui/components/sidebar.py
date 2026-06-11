@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
 )
 from ui.components.language_toggle import LanguageToggle
 from ui.lang import L
-from ui.theme import C
+from ui.theme import C, register_reload
 
 _NAV_KEYS = [
     ("dashboard", "nav_dashboard"),
@@ -17,13 +17,26 @@ _NAV_KEYS = [
     ("export",    "nav_export"),
 ]
 
-_INACTIVE_ROW = (
-    "#navrow{background:transparent;border:1px solid transparent;border-radius:8px;}"
-    f"#navrow:hover{{background:{C('surface3')};}}"
-)
-_ACTIVE_ROW = (
-    f"#navrow{{background:{C('surface')};border:1px solid {C('line')};border-radius:8px;}}"
-)
+def _build_row_styles():
+    inactive = (
+        "#navrow{background:transparent;border:1px solid transparent;border-radius:8px;}"
+        f"#navrow:hover{{background:{C('surface3')};}}"
+    )
+    active = (
+        f"#navrow{{background:{C('surface')};border:1px solid {C('line')};border-radius:8px;}}"
+    )
+    return inactive, active
+
+
+_INACTIVE_ROW, _ACTIVE_ROW = _build_row_styles()
+
+
+def _reload():
+    global _INACTIVE_ROW, _ACTIVE_ROW
+    _INACTIVE_ROW, _ACTIVE_ROW = _build_row_styles()
+
+
+register_reload(_reload)
 
 
 class _NavItem(QFrame):

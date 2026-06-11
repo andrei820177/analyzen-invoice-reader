@@ -83,5 +83,8 @@
   "status_error": "Eroare",
   "col_status": "Status",
   "categories": "categorii",
-  "theme_restart": "Tema va fi aplicata la repornirea aplicatiei."
+  "theme_restart": "Tema va fi aplicata la repornirea aplicatiei.",
+  "theme_label": "Tema:",
+  "theme_light": "Luminos",
+  "theme_dark": "Intunecat"
 }

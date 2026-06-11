@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
-from ui.theme import C
+from ui.theme import C, register_reload
 
 _PRIMARY  = C("accent")
 _INK      = C("ink")
@@ -26,6 +26,17 @@ _CATEGORY_COLORS = [
     C("accent"), "#3498db", "#e74c3c", "#f39c12",
     "#9b59b6", "#1abc9c", "#e67e22", "#5b6cc4",
 ]
+
+
+def _reload():
+    global _PRIMARY, _INK, _SURFACE, _BORDER, _MUTED, _FAINT, _GRID, _CATEGORY_COLORS
+    _PRIMARY = C("accent"); _INK = C("ink"); _SURFACE = C("surface"); _BORDER = C("line")
+    _MUTED = C("ink3"); _FAINT = C("ink4"); _GRID = C("line2")
+    _CATEGORY_COLORS = [C("accent"), "#3498db", "#e74c3c", "#f39c12",
+                        "#9b59b6", "#1abc9c", "#e67e22", "#5b6cc4"]
+
+
+register_reload(_reload)
 
 
 class KpiCard(QFrame):

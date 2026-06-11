@@ -19,28 +19,34 @@ from PyQt6.QtWidgets import (
 )
 from ui.components.widgets import NoScrollComboBox
 from ui.lang import L
-from ui.theme import C
-
-_INK     = C("ink")
-_MUTED   = C("ink3")
-_FAINT   = C("ink4")
-_LINE    = C("line")
-_SURFACE = C("surface")
-_ACCENT  = C("accent")
+from ui.theme import C, register_reload
 
 _CURRENCIES = ["RON", "EUR", "USD", "GBP", "CHF", "PLN", "CZK", "HUF",
                "SEK", "NOK", "DKK", "CAD", "JPY", "RUB"]
 
-_INP = (
-    "QLineEdit,QComboBox{"
-    f"background:{C('surface')};border:1px solid {C('line')};border-radius:8px;"
-    f"padding:6px 9px;font-size:13px;color:{C('ink')};}}"
-    f"QLineEdit:focus,QComboBox:focus{{border-color:{C('accent')};}}"
-    "QComboBox::drop-down{border:none;}"
-    f"QComboBox QAbstractItemView{{background:{C('surface')};color:{C('ink')};"
-    f"border:1px solid {C('line')};selection-background-color:{C('sel')};"
-    f"selection-color:{C('accent_ink')};}}"
-)
+
+def _input_style() -> str:
+    return (
+        "QLineEdit,QComboBox{"
+        f"background:{C('surface')};border:1px solid {C('line')};border-radius:8px;"
+        f"padding:6px 9px;font-size:13px;color:{C('ink')};}}"
+        f"QLineEdit:focus,QComboBox:focus{{border-color:{C('accent')};}}"
+        "QComboBox::drop-down{border:none;}"
+        f"QComboBox QAbstractItemView{{background:{C('surface')};color:{C('ink')};"
+        f"border:1px solid {C('line')};selection-background-color:{C('sel')};"
+        f"selection-color:{C('accent_ink')};}}"
+    )
+
+
+def _reload():
+    global _INK, _MUTED, _FAINT, _LINE, _SURFACE, _ACCENT, _INP
+    _INK = C("ink"); _MUTED = C("ink3"); _FAINT = C("ink4")
+    _LINE = C("line"); _SURFACE = C("surface"); _ACCENT = C("accent")
+    _INP = _input_style()
+
+
+_reload()
+register_reload(_reload)
 
 # editable fields: (data_key, i18n_label_key, kind)
 _FIELDS = [

@@ -11,10 +11,9 @@ sys.path.insert(0, ROOT)
 import json
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPalette
 from PyQt6.QtWidgets import QApplication
 
-from ui.theme import THEME, C
+from ui.theme import THEME, apply_palette
 
 
 def _initial_mode() -> str:
@@ -37,43 +36,6 @@ from ui.main_window import MainWindow  # noqa: E402
 QApplication.setHighDpiScaleFactorRoundingPolicy(
     Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
 )
-
-
-def apply_palette(app: QApplication) -> None:
-    """Apply a Fusion palette built from the current theme tokens.
-
-    The UI uses themed surfaces, so native widgets (message boxes, file dialogs,
-    spin-box arrows, popups) must follow the same palette — otherwise they render
-    dark-on-dark or white-on-white. Fusion fully honours the palette.
-    """
-    app.setStyle("Fusion")
-
-    pal = QPalette()
-    ink     = QColor(C("ink"))
-    muted   = QColor(C("ink4"))
-    surface = QColor(C("surface"))
-    desk    = QColor(C("desk"))
-    accent  = QColor(C("accent"))
-
-    pal.setColor(QPalette.ColorRole.Window,          desk)
-    pal.setColor(QPalette.ColorRole.WindowText,      ink)
-    pal.setColor(QPalette.ColorRole.Base,            surface)
-    pal.setColor(QPalette.ColorRole.AlternateBase,   QColor(C("surface2")))
-    pal.setColor(QPalette.ColorRole.Text,            ink)
-    pal.setColor(QPalette.ColorRole.Button,          surface)
-    pal.setColor(QPalette.ColorRole.ButtonText,      ink)
-    pal.setColor(QPalette.ColorRole.ToolTipBase,     surface)
-    pal.setColor(QPalette.ColorRole.ToolTipText,     ink)
-    pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
-    pal.setColor(QPalette.ColorRole.Highlight,       accent)
-    pal.setColor(QPalette.ColorRole.HighlightedText, QColor(C("on_accent")))
-
-    disabled = QColor(C("disabled"))
-    for role in (QPalette.ColorRole.WindowText, QPalette.ColorRole.Text,
-                 QPalette.ColorRole.ButtonText):
-        pal.setColor(QPalette.ColorGroup.Disabled, role, disabled)
-
-    app.setPalette(pal)
 
 
 # kept for backward compatibility (tests call apply_light_theme)

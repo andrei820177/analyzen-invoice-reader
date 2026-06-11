@@ -5,10 +5,10 @@ import os
 import time
 from typing import List
 
-from PyQt6.QtCore import QObject, QThread, Qt, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QThread, Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
-    QFileDialog, QFrame, QHBoxLayout, QLabel, QMainWindow,
+    QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel, QMainWindow,
     QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QWidget,
 )
@@ -28,7 +28,7 @@ from ui.lang import L, init_lang
 from ui.log_panel import LogPanel
 from ui.settings_dialog import SettingsDialog
 from ui.table_view import InvoiceTableView
-from ui.theme import C
+from ui.theme import C, THEME, apply_palette, reload_all
 
 _SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "settings.json")
 
@@ -270,38 +270,7 @@ class MainWindow(QMainWindow):
         # generous lower bound so the app stays usable on smaller resolutions
         self.setMinimumSize(880, 560)
         self.resize(1280, 800)
-        self.setStyleSheet(f"""
-            QMainWindow {{ background: {C('desk')}; }}
-            QWidget {{ font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: {C('ink')}; }}
-
-            QScrollBar:vertical {{
-                background: transparent;
-                width: 8px;
-                margin: 2px 2px 2px 0;
-            }}
-            QScrollBar::handle:vertical {{
-                background: {C('scroll')};
-                border-radius: 4px;
-                min-height: 30px;
-            }}
-            QScrollBar::handle:vertical:hover {{ background: {C('scroll_hover')}; }}
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
-
-            QScrollBar:horizontal {{
-                background: transparent;
-                height: 8px;
-                margin: 0 2px 2px 2px;
-            }}
-            QScrollBar::handle:horizontal {{
-                background: {C('scroll')};
-                border-radius: 4px;
-                min-width: 30px;
-            }}
-            QScrollBar::handle:horizontal:hover {{ background: {C('scroll_hover')}; }}
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
-            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: none; }}
-        """)
+        self._apply_window_style()
 
         self._idf = InvoiceDataFrame()
         self._watcher = FolderWatcher()
@@ -318,11 +287,34 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._dashboard.set_base_currency(settings.get("base_currency", "RON"))
         self._connect_signals()
+
+        # Ctrl+L toggles the log (created once, survives theme rebuilds)
+        shortcut = QShortcut(QKeySequence("Ctrl+L"), self)
+        shortcut.activated.connect(self._toggle_log)
+
         self._check_auto_watch()
 
     # ------------------------------------------------------------------
     # UI construction
     # ------------------------------------------------------------------
+
+    def _apply_window_style(self) -> None:
+        self.setStyleSheet(f"""
+            QMainWindow {{ background: {C('desk')}; }}
+            QWidget {{ font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: {C('ink')}; }}
+
+            QScrollBar:vertical {{ background: transparent; width: 8px; margin: 2px 2px 2px 0; }}
+            QScrollBar::handle:vertical {{ background: {C('scroll')}; border-radius: 4px; min-height: 30px; }}
+            QScrollBar::handle:vertical:hover {{ background: {C('scroll_hover')}; }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
+
+            QScrollBar:horizontal {{ background: transparent; height: 8px; margin: 0 2px 2px 2px; }}
+            QScrollBar::handle:horizontal {{ background: {C('scroll')}; border-radius: 4px; min-width: 30px; }}
+            QScrollBar::handle:horizontal:hover {{ background: {C('scroll_hover')}; }}
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
+            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: none; }}
+        """)
 
     def _build_ui(self) -> None:
         central = QWidget()
@@ -395,10 +387,6 @@ class MainWindow(QMainWindow):
         content_layout.addWidget(self._log)
 
         main_layout.addWidget(content_frame, 1)
-
-        # Ctrl+L shortcut to toggle log
-        shortcut = QShortcut(QKeySequence("Ctrl+L"), self)
-        shortcut.activated.connect(self._toggle_log)
 
     def _make_header_btn(self, key: str, primary: bool) -> QPushButton:
         btn = QPushButton(L().t(key))
@@ -662,10 +650,11 @@ class MainWindow(QMainWindow):
         dlg = SettingsDialog(self)
         if dlg.exec():
             settings = _load_settings()
-            if settings.get("theme", "light") != old_theme:
-                QMessageBox.information(
-                    self, L().t("app_title"), L().t("theme_restart")
-                )
+            new_theme = settings.get("theme", "light")
+            if new_theme != old_theme:
+                # defer to the next loop tick so the current signal finishes
+                # before the central widget (incl. the sidebar) is rebuilt
+                QTimer.singleShot(0, lambda m=new_theme: self._apply_theme(m))
             new_lang = settings.get("language", "ro")
             if new_lang != L().code:
                 L().load(new_lang)
@@ -681,6 +670,28 @@ class MainWindow(QMainWindow):
             self._log.setVisible(settings.get("show_log", False))
             if len(self._idf) > 0:
                 self._refresh_views()
+
+    def _apply_theme(self, mode: str) -> None:
+        """Switch theme live: rebuild the UI from refreshed tokens, keep data."""
+        if self._worker_thread and self._worker_thread.isRunning():
+            QMessageBox.information(self, L().t("app_title"), L().t("theme_restart"))
+            return
+        THEME.set_mode(mode)
+        reload_all()                       # refresh module-level colour caches
+        apply_palette(QApplication.instance())
+
+        page = self._current_page
+        self._apply_window_style()         # window chrome, scrollbars, base text
+        self._build_ui()                   # recreate the central widget tree
+        settings = _load_settings()
+        self._dashboard.set_base_currency(settings.get("base_currency", "RON"))
+        self._connect_signals()
+        if self._watcher.is_running:
+            self._btn_watch.setText(L().t("btn_stop_watch"))
+        if len(self._idf) > 0:
+            self._refresh_views()
+        self._sidebar.set_active(page)
+        self._on_page_changed(page)
 
     def _check_auto_watch(self) -> None:
         settings = _load_settings()

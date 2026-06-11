@@ -71,5 +71,8 @@
   "status_error": "Fehler",
   "col_status": "Status",
   "categories": "Kategorien",
-  "theme_restart": "Das Thema wird nach einem Neustart der App übernommen."
+  "theme_restart": "Das Thema wird nach einem Neustart der App übernommen.",
+  "theme_label": "Design:",
+  "theme_light": "Hell",
+  "theme_dark": "Dunkel"
 }

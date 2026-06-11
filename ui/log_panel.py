@@ -6,14 +6,27 @@ from PyQt6.QtWidgets import (
     QHBoxLayout, QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget,
 )
 from ui.lang import L
-from ui.theme import C, THEME
+from ui.theme import C, THEME, register_reload
 
-_LEVEL_COLORS = {
-    "info":    C("ink2") if not THEME.is_dark else "#9fb0d4",
-    "warning": C("warn_ink"),
-    "error":   C("err_ink"),
-    "success": C("accent_ink"),
-}
+
+def _level_colors() -> dict:
+    return {
+        "info":    "#9fb0d4" if THEME.is_dark else C("ink2"),
+        "warning": C("warn_ink"),
+        "error":   C("err_ink"),
+        "success": C("accent_ink"),
+    }
+
+
+_LEVEL_COLORS = _level_colors()
+
+
+def _reload():
+    global _LEVEL_COLORS
+    _LEVEL_COLORS = _level_colors()
+
+
+register_reload(_reload)
 _LEVEL_PREFIX = {
     "info":    "·",
     "warning": "!",

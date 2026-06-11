@@ -8,7 +8,8 @@ from PyQt6.QtWidgets import (
 )
 from core.currency import SOURCE_LABELS
 from ui.components.widgets import NoScrollComboBox
-from ui.theme import C
+from ui.lang import L
+from ui.theme import C, register_reload
 
 _SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "settings.json")
 
@@ -30,7 +31,8 @@ def _save(data: dict) -> None:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
-_INPUT_STYLE = (
+def _input_style() -> str:
+    return (
     "QLineEdit,QSpinBox,QDoubleSpinBox,QComboBox{"
     f"background:{C('surface')};border:1px solid {C('line')};border-radius:8px;"
     f"padding:4px 8px;font-size:13px;color:{C('ink')};min-height:28px;}}"
@@ -50,7 +52,18 @@ _INPUT_STYLE = (
     f"border-left:1px solid {C('line')};border-bottom-right-radius:8px;background:{C('surface2')};}}"
     "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,"
     f"QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{{background:{C('accent_soft')};}}"
-)
+    )
+
+
+_INPUT_STYLE = _input_style()
+
+
+def _reload():
+    global _INPUT_STYLE
+    _INPUT_STYLE = _input_style()
+
+
+register_reload(_reload)
 
 
 class SettingsDialog(QDialog):
@@ -132,11 +145,11 @@ class SettingsDialog(QDialog):
 
         self._theme = NoScrollComboBox()
         self._theme.setStyleSheet(_INPUT_STYLE)
-        self._theme.addItem("Luminos (light)", "light")
-        self._theme.addItem("Intunecat (dark)", "dark")
+        self._theme.addItem(L().t("theme_light"), "light")
+        self._theme.addItem(L().t("theme_dark"), "dark")
         idx = self._theme.findData(self._settings.get("theme", "light"))
         self._theme.setCurrentIndex(idx if idx >= 0 else 0)
-        form.addRow("Tema:", self._theme)
+        form.addRow(L().t("theme_label"), self._theme)
 
         watch_row = QHBoxLayout()
         self._watch_folder = QLineEdit(self._settings.get("watch_folder", ""))

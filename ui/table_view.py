@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
 from data.processor import row_status
 from ui.detail_drawer import DetailDrawer
 from ui.lang import L
-from ui.theme import C
+from ui.theme import C, register_reload
 
 _COL_DEFS = [
     ("supplier_name",    "col_supplier"),
@@ -57,7 +57,8 @@ _FILTER_KEYS = [
 ]
 
 # pill filter chips (.fchip / .fchip.on in reference)
-_CHIP_STYLE = f"""
+def _chip_style() -> str:
+    return f"""
     QPushButton {{
         background: {C('surface')}; color: {C('ink2')};
         border: 1px solid {C('line')}; border-radius: 14px;
@@ -66,6 +67,26 @@ _CHIP_STYLE = f"""
     QPushButton:hover {{ background: {C('surface2')}; }}
     QPushButton:checked {{ background: {C('ink')}; color: {C('surface')}; border-color: {C('ink')}; }}
 """
+
+
+_CHIP_STYLE = _chip_style()
+
+
+def _reload():
+    global _EMPTY_RED, _FLAG_RED, _FLAG_ORANGE, _FLAG_YELLOW, _CHIP_STYLE
+    _EMPTY_RED = QColor(C("err_ink"))
+    _FLAG_RED = QColor(C("err_soft"))
+    _FLAG_ORANGE = QColor(C("warn_soft"))
+    _FLAG_YELLOW = QColor(C("warn_soft"))
+    _CHIP_STYLE = _chip_style()
+    StatusPillDelegate._STYLE = {
+        "valid":   (C("accent_soft"), C("accent_ink"), C("ok")),
+        "warning": (C("warn_soft"), C("warn_ink"), C("warn")),
+        "error":   (C("err_soft"), C("err_ink"), C("err")),
+    }
+
+
+register_reload(_reload)
 
 
 def _is_empty(val: Any) -> bool:

@@ -115,3 +115,44 @@ THEME = _Theme()
 def C(key: str) -> str:
     """Current value of a theme token."""
     return THEME.color(key)
+
+
+def apply_palette(app) -> None:
+    """Apply a Fusion palette built from the current theme tokens so native
+    widgets (message boxes, file dialogs, popups) follow the theme too."""
+    from PyQt6.QtGui import QColor, QPalette
+
+    app.setStyle("Fusion")
+    pal = QPalette()
+    ink, muted = QColor(C("ink")), QColor(C("ink4"))
+    surface, desk = QColor(C("surface")), QColor(C("desk"))
+    pal.setColor(QPalette.ColorRole.Window,          desk)
+    pal.setColor(QPalette.ColorRole.WindowText,      ink)
+    pal.setColor(QPalette.ColorRole.Base,            surface)
+    pal.setColor(QPalette.ColorRole.AlternateBase,   QColor(C("surface2")))
+    pal.setColor(QPalette.ColorRole.Text,            ink)
+    pal.setColor(QPalette.ColorRole.Button,          surface)
+    pal.setColor(QPalette.ColorRole.ButtonText,      ink)
+    pal.setColor(QPalette.ColorRole.ToolTipBase,     surface)
+    pal.setColor(QPalette.ColorRole.ToolTipText,     ink)
+    pal.setColor(QPalette.ColorRole.PlaceholderText, muted)
+    pal.setColor(QPalette.ColorRole.Highlight,       QColor(C("accent")))
+    pal.setColor(QPalette.ColorRole.HighlightedText, QColor(C("on_accent")))
+    disabled = QColor(C("disabled"))
+    for role in (QPalette.ColorRole.WindowText, QPalette.ColorRole.Text,
+                 QPalette.ColorRole.ButtonText):
+        pal.setColor(QPalette.ColorGroup.Disabled, role, disabled)
+    app.setPalette(pal)
+
+
+# modules whose import-time colour constants must be refreshed on a live switch
+_RELOAD_HOOKS = []
+
+
+def register_reload(fn) -> None:
+    _RELOAD_HOOKS.append(fn)
+
+
+def reload_all() -> None:
+    for fn in _RELOAD_HOOKS:
+        fn()

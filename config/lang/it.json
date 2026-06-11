@@ -71,5 +71,8 @@
   "status_error": "Errore",
   "col_status": "Stato",
   "categories": "categorie",
-  "theme_restart": "Il tema verrà applicato dopo il riavvio dell'app."
+  "theme_restart": "Il tema verrà applicato dopo il riavvio dell'app.",
+  "theme_label": "Tema:",
+  "theme_light": "Chiaro",
+  "theme_dark": "Scuro"
 }

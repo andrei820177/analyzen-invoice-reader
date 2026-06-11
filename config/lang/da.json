@@ -71,5 +71,8 @@
   "status_error": "Fejl",
   "col_status": "Status",
   "categories": "kategorier",
-  "theme_restart": "Temaet anvendes efter genstart af appen."
+  "theme_restart": "Temaet anvendes efter genstart af appen.",
+  "theme_label": "Tema:",
+  "theme_light": "Lys",
+  "theme_dark": "Mørk"
 }

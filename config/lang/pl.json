@@ -71,5 +71,8 @@
   "status_error": "Błąd",
   "col_status": "Status",
   "categories": "kategorie",
-  "theme_restart": "Motyw zostanie zastosowany po ponownym uruchomieniu aplikacji."
+  "theme_restart": "Motyw zostanie zastosowany po ponownym uruchomieniu aplikacji.",
+  "theme_label": "Motyw:",
+  "theme_light": "Jasny",
+  "theme_dark": "Ciemny"
 }

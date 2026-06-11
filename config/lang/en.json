@@ -83,5 +83,8 @@
   "status_error": "Error",
   "col_status": "Status",
   "categories": "categories",
-  "theme_restart": "The theme will be applied after restarting the app."
+  "theme_restart": "The theme will be applied after restarting the app.",
+  "theme_label": "Theme:",
+  "theme_light": "Light",
+  "theme_dark": "Dark"
 }

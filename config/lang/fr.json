@@ -71,5 +71,8 @@
   "status_error": "Erreur",
   "col_status": "Statut",
   "categories": "catégories",
-  "theme_restart": "Le thème sera appliqué après le redémarrage de l'application."
+  "theme_restart": "Le thème sera appliqué après le redémarrage de l'application.",
+  "theme_label": "Thème :",
+  "theme_light": "Clair",
+  "theme_dark": "Sombre"
 }

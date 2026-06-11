@@ -71,5 +71,8 @@
   "status_error": "Erro",
   "col_status": "Estado",
   "categories": "categorias",
-  "theme_restart": "O tema será aplicado após reiniciar a aplicação."
+  "theme_restart": "O tema será aplicado após reiniciar a aplicação.",
+  "theme_label": "Tema:",
+  "theme_light": "Claro",
+  "theme_dark": "Escuro"
 }

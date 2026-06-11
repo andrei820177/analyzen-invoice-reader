@@ -1,21 +1,8 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QWidget
 
+from ui.components.language_data import get_languages
 from ui.theme import C
-
-_LANGUAGES = [
-    ("ro", "Română"),
-    ("en", "English"),
-    ("de", "Deutsch"),
-    ("fr", "Français"),
-    ("it", "Italiano"),
-    ("es", "Español"),
-    ("pt", "Português"),
-    ("pl", "Polski"),
-    ("ru", "Русский"),
-    ("nl", "Nederlands"),
-    ("da", "Dansk"),
-]
 
 
 class LanguageToggle(QWidget):
@@ -54,7 +41,7 @@ class LanguageToggle(QWidget):
             }}
         """)
 
-        for code, label in _LANGUAGES:
+        for code, label in get_languages():
             self._combo.addItem(label, code)
 
         self._select(current, emit=False)

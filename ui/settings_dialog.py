@@ -130,19 +130,7 @@ class SettingsDialog(QDialog):
         form.setContentsMargins(16, 16, 16, 16)
         form.setSpacing(12)
 
-        self._lang_ro = QCheckBox("Romana")
-        self._lang_en = QCheckBox("English")
-        lang = self._settings.get("language", "ro")
-        self._lang_ro.setChecked(lang == "ro")
-        self._lang_en.setChecked(lang == "en")
-        self._lang_ro.toggled.connect(lambda c: self._lang_en.setChecked(not c) if c else None)
-        self._lang_en.toggled.connect(lambda c: self._lang_ro.setChecked(not c) if c else None)
-        lang_row = QHBoxLayout()
-        lang_row.addWidget(self._lang_ro)
-        lang_row.addWidget(self._lang_en)
-        lang_row.addStretch()
-        form.addRow("Limba:", lang_row)
-
+        # Language is chosen from the sidebar toggle, not here.
         self._theme = NoScrollComboBox()
         self._theme.setStyleSheet(_INPUT_STYLE)
         self._theme.addItem(L().t("theme_light"), "light")
@@ -333,12 +321,10 @@ class SettingsDialog(QDialog):
             self._tesseract_path.setText(path)
 
     def _on_save(self) -> None:
-        lang    = "ro" if self._lang_ro.isChecked() else "en"
         to_list = [e.strip() for e in self._smtp_to.text().split(",") if e.strip()]
 
         data = dict(self._settings)
         data.update({
-            "language":                  lang,
             "theme":                     self._theme.currentData(),
             "watch_folder":              self._watch_folder.text().strip(),
             "due_date_alert_days":       self._due_days.value(),

@@ -208,15 +208,14 @@ class InvoiceDataFrame:
             return {"count": 0, "total_base": 0.0, "base": base_currency(),
                     "per_currency": {}, "status": {"valid": 0, "warning": 0, "error": 0}}
 
+        # Each currency's contribution expressed in the base currency, so the
+        # breakdown rows reconcile with (sum to) the converted grand total.
         per_currency: dict = {}
         for cur, grp in df.groupby("currency"):
-            vals = pd.to_numeric(grp["total"], errors="coerce").fillna(0)
-            per_currency[str(cur)] = float(vals.sum())
+            native = float(pd.to_numeric(grp["total"], errors="coerce").fillna(0).sum())
+            per_currency[str(cur)] = convert(native, str(cur))
 
-        total_base = float(df.apply(
-            lambda r: convert(float(r["total"] or 0), str(r.get("currency", "RON"))),
-            axis=1,
-        ).sum())
+        total_base = float(sum(per_currency.values()))
 
         status = {"valid": 0, "warning": 0, "error": 0}
         for _, r in df.iterrows():

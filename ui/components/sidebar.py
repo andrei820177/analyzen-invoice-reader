@@ -149,7 +149,7 @@ class _SummaryCard(QFrame):
         self._chips_wrap.setStyleSheet("background:transparent;")
         self._chips = QHBoxLayout(self._chips_wrap)
         self._chips.setContentsMargins(0, 6, 0, 0)
-        self._chips.setSpacing(5)
+        self._chips.setSpacing(4)
 
         self._bar = _HealthBar()
 
@@ -170,8 +170,8 @@ class _SummaryCard(QFrame):
         for code, amount in chips[:3]:
             chip = QLabel(f"{code} {amount}")
             chip.setStyleSheet(
-                "background:#f0f1f5;color:#5d6480;font-size:11px;font-weight:600;"
-                "padding:1px 7px;border-radius:6px;border:none;"
+                "background:#f0f1f5;color:#5d6480;font-size:10px;font-weight:700;"
+                "padding:2px 6px;border-radius:6px;border:none;"
             )
             self._chips.addWidget(chip)
         self._chips.addStretch()

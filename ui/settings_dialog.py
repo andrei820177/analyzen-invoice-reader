@@ -35,11 +35,20 @@ _INPUT_STYLE = (
     "padding:4px 8px;font-size:13px;color:#2e3552;min-height:28px;}"
     "QLineEdit:focus,QSpinBox:focus,QDoubleSpinBox:focus,QComboBox:focus{"
     "border-color:#2f8f6b;}"
-    "QComboBox::drop-down{border:none;}"
+    "QComboBox::drop-down{border:none;width:22px;}"
     # dropdown popup: explicit colors so items are never white-on-white
     "QComboBox QAbstractItemView{"
     "background:#fefefe;color:#2e3552;border:1px solid #e3e5ec;"
     "selection-background-color:rgba(47,143,107,0.12);selection-color:#1a6b4f;}"
+    # flat, modern spin buttons (no 3D bevel); native Fusion arrows are kept
+    "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;"
+    "subcontrol-position:top right;width:20px;border:none;"
+    "border-left:1px solid #e3e5ec;border-top-right-radius:8px;background:#f6f7f9;}"
+    "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;"
+    "subcontrol-position:bottom right;width:20px;border:none;"
+    "border-left:1px solid #e3e5ec;border-bottom-right-radius:8px;background:#f6f7f9;}"
+    "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,"
+    "QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{background:#e6f0eb;}"
 )
 
 

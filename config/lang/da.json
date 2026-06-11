@@ -74,5 +74,17 @@
   "theme_restart": "Temaet anvendes efter genstart af appen.",
   "theme_label": "Tema:",
   "theme_light": "Lys",
-  "theme_dark": "Mørk"
+  "theme_dark": "Mørk",
+  "filter_all": "Alle",
+  "filter_flagged": "Markeret",
+  "filter_duplicates": "Dubletter",
+  "filter_outliers": "Afvigere",
+  "filter_near_due": "Snart forfald",
+  "log_processing": "Behandler: {}",
+  "log_done": "Færdig: {} fakturaer på {:.1f}s",
+  "log_duplicate": "Dublet fundet: {}",
+  "log_outlier": "Afvigende værdi: {} ({})",
+  "log_near_due": "Snart forfald: {} ({})",
+  "log_ocr": "OCR aktiv: {}",
+  "log_error": "Fejl ved {}: {}"
 }

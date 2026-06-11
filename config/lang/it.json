@@ -74,5 +74,17 @@
   "theme_restart": "Il tema verrà applicato dopo il riavvio dell'app.",
   "theme_label": "Tema:",
   "theme_light": "Chiaro",
-  "theme_dark": "Scuro"
+  "theme_dark": "Scuro",
+  "filter_all": "Tutte",
+  "filter_flagged": "Segnalate",
+  "filter_duplicates": "Duplicati",
+  "filter_outliers": "Anomale",
+  "filter_near_due": "In scadenza",
+  "log_processing": "Elaborazione: {}",
+  "log_done": "Completato: {} fatture in {:.1f}s",
+  "log_duplicate": "Duplicato rilevato: {}",
+  "log_outlier": "Valore anomalo: {} ({})",
+  "log_near_due": "In scadenza: {} ({})",
+  "log_ocr": "OCR attivo: {}",
+  "log_error": "Errore a {}: {}"
 }

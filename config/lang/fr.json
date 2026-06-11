@@ -74,5 +74,17 @@
   "theme_restart": "Le thème sera appliqué après le redémarrage de l'application.",
   "theme_label": "Thème :",
   "theme_light": "Clair",
-  "theme_dark": "Sombre"
+  "theme_dark": "Sombre",
+  "filter_all": "Toutes",
+  "filter_flagged": "Signalées",
+  "filter_duplicates": "Doublons",
+  "filter_outliers": "Aberrantes",
+  "filter_near_due": "Échéance proche",
+  "log_processing": "Traitement : {}",
+  "log_done": "Terminé : {} factures en {:.1f}s",
+  "log_duplicate": "Doublon détecté : {}",
+  "log_outlier": "Valeur aberrante : {} ({})",
+  "log_near_due": "Échéance proche : {} ({})",
+  "log_ocr": "OCR actif : {}",
+  "log_error": "Erreur à {} : {}"
 }

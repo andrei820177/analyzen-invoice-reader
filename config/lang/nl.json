@@ -74,5 +74,17 @@
   "theme_restart": "Het thema wordt toegepast na het herstarten van de app.",
   "theme_label": "Thema:",
   "theme_light": "Licht",
-  "theme_dark": "Donker"
+  "theme_dark": "Donker",
+  "filter_all": "Alle",
+  "filter_flagged": "Gemarkeerd",
+  "filter_duplicates": "Duplicaten",
+  "filter_outliers": "Uitschieters",
+  "filter_near_due": "Bijna vervallen",
+  "log_processing": "Verwerken: {}",
+  "log_done": "Klaar: {} facturen in {:.1f}s",
+  "log_duplicate": "Duplicaat gevonden: {}",
+  "log_outlier": "Uitschieter: {} ({})",
+  "log_near_due": "Bijna vervallen: {} ({})",
+  "log_ocr": "OCR actief: {}",
+  "log_error": "Fout bij {}: {}"
 }

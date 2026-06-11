@@ -74,5 +74,17 @@
   "theme_restart": "Motyw zostanie zastosowany po ponownym uruchomieniu aplikacji.",
   "theme_label": "Motyw:",
   "theme_light": "Jasny",
-  "theme_dark": "Ciemny"
+  "theme_dark": "Ciemny",
+  "filter_all": "Wszystkie",
+  "filter_flagged": "Oznaczone",
+  "filter_duplicates": "Duplikaty",
+  "filter_outliers": "Odstające",
+  "filter_near_due": "Bliski termin",
+  "log_processing": "Przetwarzanie: {}",
+  "log_done": "Gotowe: {} faktur w {:.1f}s",
+  "log_duplicate": "Wykryto duplikat: {}",
+  "log_outlier": "Wartość odstająca: {} ({})",
+  "log_near_due": "Bliski termin: {} ({})",
+  "log_ocr": "OCR aktywny: {}",
+  "log_error": "Błąd przy {}: {}"
 }

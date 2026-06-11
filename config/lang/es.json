@@ -74,5 +74,17 @@
   "theme_restart": "El tema se aplicará al reiniciar la aplicación.",
   "theme_label": "Tema:",
   "theme_light": "Claro",
-  "theme_dark": "Oscuro"
+  "theme_dark": "Oscuro",
+  "filter_all": "Todas",
+  "filter_flagged": "Marcadas",
+  "filter_duplicates": "Duplicados",
+  "filter_outliers": "Atípicas",
+  "filter_near_due": "Próx. vencimiento",
+  "log_processing": "Procesando: {}",
+  "log_done": "Listo: {} facturas en {:.1f}s",
+  "log_duplicate": "Duplicado detectado: {}",
+  "log_outlier": "Valor atípico: {} ({})",
+  "log_near_due": "Próximo vencimiento: {} ({})",
+  "log_ocr": "OCR activo: {}",
+  "log_error": "Error en {}: {}"
 }

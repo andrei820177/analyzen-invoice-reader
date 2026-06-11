@@ -74,5 +74,17 @@
   "theme_restart": "Тема будет применена после перезапуска приложения.",
   "theme_label": "Тема:",
   "theme_light": "Светлая",
-  "theme_dark": "Тёмная"
+  "theme_dark": "Тёмная",
+  "filter_all": "Все",
+  "filter_flagged": "Отмеченные",
+  "filter_duplicates": "Дубликаты",
+  "filter_outliers": "Аномальные",
+  "filter_near_due": "Скоро срок",
+  "log_processing": "Обработка: {}",
+  "log_done": "Готово: {} счетов за {:.1f}с",
+  "log_duplicate": "Обнаружен дубликат: {}",
+  "log_outlier": "Аномальное значение: {} ({})",
+  "log_near_due": "Скоро срок: {} ({})",
+  "log_ocr": "OCR активен: {}",
+  "log_error": "Ошибка в {}: {}"
 }

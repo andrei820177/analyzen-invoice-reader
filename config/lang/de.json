@@ -74,5 +74,17 @@
   "theme_restart": "Das Thema wird nach einem Neustart der App übernommen.",
   "theme_label": "Design:",
   "theme_light": "Hell",
-  "theme_dark": "Dunkel"
+  "theme_dark": "Dunkel",
+  "filter_all": "Alle",
+  "filter_flagged": "Markiert",
+  "filter_duplicates": "Duplikate",
+  "filter_outliers": "Ausreißer",
+  "filter_near_due": "Bald fällig",
+  "log_processing": "Verarbeitung: {}",
+  "log_done": "Fertig: {} Rechnungen in {:.1f}s",
+  "log_duplicate": "Duplikat erkannt: {}",
+  "log_outlier": "Ausreißerwert: {} ({})",
+  "log_near_due": "Bald fällig: {} ({})",
+  "log_ocr": "OCR aktiv: {}",
+  "log_error": "Fehler bei {}: {}"
 }

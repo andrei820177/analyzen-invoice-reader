@@ -275,7 +275,8 @@ class BarChartWidget(QWidget):
         self._color = color
         self._hover = -1
         self._hover_pos = None
-        self._cols = None      # (ml, slot, n) for hit-testing
+        self._bars = []        # [(x0, x1, y_top), ...] actual bar rects
+        self._axis_y = 0.0
         self.setMouseTracking(True)
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -286,13 +287,13 @@ class BarChartWidget(QWidget):
         self.update()
 
     def mouseMoveEvent(self, event):
+        pos = event.position()
         idx = -1
-        if self._cols and self._data:
-            ml, slot, n = self._cols
-            i = int((event.position().x() - ml) // slot)
-            if 0 <= i < n:
+        for i, (x0, x1, y_top) in enumerate(self._bars):
+            if x0 <= pos.x() <= x1 and y_top <= pos.y() <= self._axis_y:
                 idx = i
-        self._hover_pos = event.position()
+                break
+        self._hover_pos = pos
         self._hover = idx
         self.update()
         super().mouseMoveEvent(event)
@@ -329,7 +330,8 @@ class BarChartWidget(QWidget):
         vmax = max(v for _, v in self._data) or 1.0
         bar_w = min(slot * 0.62, 46)
         axis_y = mt + ph
-        self._cols = (ml, slot, n)
+        self._axis_y = axis_y
+        bars = []
 
         # subtle horizontal gridlines
         p.setPen(QPen(QColor("#eef0f4")))
@@ -343,6 +345,7 @@ class BarChartWidget(QWidget):
             bh = (val / vmax) * (ph * 0.80)
             cx = ml + slot * i + slot / 2
             y = axis_y - bh
+            bars.append((cx - bar_w / 2, cx + bar_w / 2, y))
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(hover_col if i == self._hover else base)
             p.drawRoundedRect(QRectF(cx - bar_w / 2, y, bar_w, max(bh, 2)), 4, 4)
@@ -370,6 +373,7 @@ class BarChartWidget(QWidget):
                            int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
                            label)
 
+        self._bars = bars
         if self._hover >= 0 and self._hover_pos is not None:
             label, val = self._data[self._hover]
             _draw_tooltip(p, self.rect(), self._hover_pos, label,
@@ -386,7 +390,7 @@ class HBarChartWidget(QWidget):
         self._color = color
         self._hover = -1
         self._hover_pos = None
-        self._rows = None      # (mt, row_h, n) for hit-testing
+        self._bars = []        # [(x0, x1, y0, y1), ...] bar hit areas
         self.setMouseTracking(True)
         self.setMinimumHeight(200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -397,13 +401,13 @@ class HBarChartWidget(QWidget):
         self.update()
 
     def mouseMoveEvent(self, event):
+        pos = event.position()
         idx = -1
-        if self._rows and self._data:
-            mt, row_h, n = self._rows
-            i = int((event.position().y() - mt) // row_h)
-            if 0 <= i < n:
+        for i, (x0, x1, y0, y1) in enumerate(self._bars):
+            if x0 <= pos.x() <= x1 and y0 <= pos.y() <= y1:
                 idx = i
-        self._hover_pos = event.position()
+                break
+        self._hover_pos = pos
         self._hover = idx
         self.update()
         super().mouseMoveEvent(event)
@@ -431,7 +435,7 @@ class HBarChartWidget(QWidget):
         vmax = max(v for _, v in self._data) or 1.0
         n = len(self._data)
         row_h = ph / n
-        self._rows = (mt, row_h, n)
+        bars = []
 
         name_font = QFont(); name_font.setPointSizeF(8.5)
         val_font = QFont(); val_font.setPointSizeF(8.5); val_font.setBold(True)
@@ -456,6 +460,8 @@ class HBarChartWidget(QWidget):
                        fm.elidedText(label, Qt.TextElideMode.ElideRight, int(label_w - 10)))
 
             bw = max((val / vmax) * bar_area, 2)
+            # hit area: the bar's width, full row height (easier to hover)
+            bars.append((label_w, label_w + bw, y, y + row_h))
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(hover_col if i == self._hover else base)
             p.drawRoundedRect(QRectF(label_w, by, bw, bh), 4, 4)
@@ -466,6 +472,7 @@ class HBarChartWidget(QWidget):
                        int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
                        _fmt_compact(val))
 
+        self._bars = bars
         if self._hover >= 0 and self._hover_pos is not None:
             label, val = self._data[self._hover]
             _draw_tooltip(p, self.rect(), self._hover_pos, label,

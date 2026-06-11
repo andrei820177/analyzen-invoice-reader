@@ -156,3 +156,24 @@ def register_reload(fn) -> None:
 def reload_all() -> None:
     for fn in _RELOAD_HOOKS:
         fn()
+
+
+def apply_soft_shadow(widget, blur: int = 26, dy: int = 7, alpha: int | None = None):
+    """Attach a soft, modern ambient drop shadow to a widget.
+
+    Large blur + small offset + low opacity reads as gentle elevation rather
+    than a hard drop. Safe for child widgets (it is painted by the parent);
+    do not use on translucent top-level popups.
+    """
+    from PyQt6.QtWidgets import QGraphicsDropShadowEffect
+    from PyQt6.QtGui import QColor
+
+    if alpha is None:
+        alpha = 105 if THEME.is_dark else 30
+    eff = QGraphicsDropShadowEffect(widget)
+    eff.setBlurRadius(blur)
+    eff.setXOffset(0)
+    eff.setYOffset(dy)
+    eff.setColor(QColor(12, 18, 33, alpha))
+    widget.setGraphicsEffect(eff)
+    return eff

@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (
 )
 from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
-from ui.theme import C, register_reload
+from ui.theme import C, apply_soft_shadow, register_reload
 
 _PRIMARY  = C("accent")
 _INK      = C("ink")
@@ -71,6 +71,8 @@ class KpiCard(QFrame):
         bar = QFrame(self)
         bar.setGeometry(0, 0, 4, 90)
         bar.setStyleSheet(f"background: {accent}; border-radius: 2px; border: none;")
+
+        apply_soft_shadow(self, blur=22, dy=6)
 
     def set_value(self, value: str) -> None:
         self._value_lbl.setText(value)
@@ -260,8 +262,13 @@ def _draw_tooltip(p: QPainter, bounds, pos: QPointF,
     y = max(4, min(y, bounds.height() - h - 4))
 
     p.setPen(Qt.PenStyle.NoPen)
-    p.setBrush(QColor(16, 24, 40, 32))                 # soft shadow
-    p.drawRoundedRect(QRectF(x + 1, y + 3, w, h), 8, 8)
+    # feathered ambient shadow: stacked translucent rings, faint outside ->
+    # denser near the card edge; the surface drawn on top hides the centre
+    for gi in range(6, 0, -1):
+        a = 5 + (6 - gi) * 4
+        p.setBrush(QColor(12, 18, 33, a))
+        p.drawRoundedRect(QRectF(x - gi, y - gi + 4, w + 2 * gi, h + 2 * gi),
+                          8 + gi, 8 + gi)
     p.setBrush(QColor(_SURFACE))
     p.setPen(QPen(QColor(C("tooltip_border")), 1))               # contour
     p.drawRoundedRect(QRectF(x, y, w, h), 8, 8)
@@ -523,6 +530,7 @@ class ChartCard(QFrame):
         root.addWidget(sep)
 
         self._content_layout = root
+        apply_soft_shadow(self, blur=22, dy=6)
 
     def add_widget(self, widget: QWidget) -> None:
         self._content_layout.addWidget(widget, 1)
@@ -545,12 +553,12 @@ class DashboardPage(QWidget):
         content = QWidget()
         content.setStyleSheet("background: transparent;")
         root = QVBoxLayout(content)
-        root.setContentsMargins(24, 20, 24, 20)
-        root.setSpacing(16)
+        root.setContentsMargins(26, 22, 26, 24)
+        root.setSpacing(18)
 
         # KPI row
         kpi_row = QHBoxLayout()
-        kpi_row.setSpacing(12)
+        kpi_row.setSpacing(16)
         self._kpi_invoices = KpiCard("kpi_total_invoices", "0",       "#2f8f6b")
         self._kpi_value    = KpiCard("kpi_total_value",    "0 RON",   "#3498db")
         self._kpi_vat      = KpiCard("kpi_total_vat",      "0 RON",   "#9b59b6")
@@ -561,7 +569,7 @@ class DashboardPage(QWidget):
 
         # Charts row
         charts_row = QHBoxLayout()
-        charts_row.setSpacing(12)
+        charts_row.setSpacing(16)
 
         self._month_card = ChartCard("chart_by_month")
         self._bar_plot = BarChartWidget(_PRIMARY)

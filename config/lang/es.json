@@ -70,5 +70,6 @@
   "status_warning": "Aviso",
   "status_error": "Error",
   "col_status": "Estado",
-  "categories": "categorías"
+  "categories": "categorías",
+  "theme_restart": "El tema se aplicará al reiniciar la aplicación."
 }

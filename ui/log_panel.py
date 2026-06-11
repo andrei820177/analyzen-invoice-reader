@@ -6,12 +6,13 @@ from PyQt6.QtWidgets import (
     QHBoxLayout, QLabel, QPushButton, QTextEdit, QVBoxLayout, QWidget,
 )
 from ui.lang import L
+from ui.theme import C, THEME
 
 _LEVEL_COLORS = {
-    "info":    "#465070",
-    "warning": "#b45309",
-    "error":   "#b91c1c",
-    "success": "#166534",
+    "info":    C("ink2") if not THEME.is_dark else "#9fb0d4",
+    "warning": C("warn_ink"),
+    "error":   C("err_ink"),
+    "success": C("accent_ink"),
 }
 _LEVEL_PREFIX = {
     "info":    "·",
@@ -34,14 +35,14 @@ class LogPanel(QWidget):
         header = QWidget()
         header.setFixedHeight(30)
         header.setStyleSheet(
-            "background: #f6f7f9; border-top: 1px solid #e3e5ec;"
+            f"background: {C('surface2')}; border-top: 1px solid {C('line')};"
         )
         h_layout = QHBoxLayout(header)
         h_layout.setContentsMargins(12, 0, 8, 0)
 
         self._title = QLabel("Log")
         self._title.setStyleSheet(
-            "color: #6b7291; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;"
+            f"color: {C('ink3')}; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;"
         )
         h_layout.addWidget(self._title)
         h_layout.addStretch()
@@ -49,8 +50,8 @@ class LogPanel(QWidget):
         self._clear_btn = QPushButton(L().t("btn_clear"))
         self._clear_btn.setFixedHeight(20)
         self._clear_btn.setStyleSheet(
-            "QPushButton { background: transparent; color: #939ab0; font-size: 10px; border: none; padding: 0 6px; }"
-            "QPushButton:hover { color: #2f8f6b; }"
+            f"QPushButton {{ background: transparent; color: {C('ink4')}; font-size: 10px; border: none; padding: 0 6px; }}"
+            f"QPushButton:hover {{ color: {C('accent')}; }}"
         )
         self._clear_btn.clicked.connect(self.clear)
         h_layout.addWidget(self._clear_btn)
@@ -61,14 +62,14 @@ class LogPanel(QWidget):
         self._text.setReadOnly(True)
         self._text.setStyleSheet(
             "QTextEdit {"
-            "  background: #fafbfd;"
-            "  color: #2e3552;"
+            f"  background: {C('surface')};"
+            f"  color: {C('ink')};"
             "  font-family: Consolas, 'Courier New', monospace;"
             "  font-size: 11px;"
             "  border: none;"
-            "  border-left: 1px solid #e3e5ec;"
-            "  border-right: 1px solid #e3e5ec;"
-            "  border-bottom: 1px solid #e3e5ec;"
+            f"  border-left: 1px solid {C('line')};"
+            f"  border-right: 1px solid {C('line')};"
+            f"  border-bottom: 1px solid {C('line')};"
             "  padding: 4px 8px;"
             "}"
         )
@@ -81,14 +82,14 @@ class LogPanel(QWidget):
     @pyqtSlot(str, str)
     def append(self, message: str, level: str = "info") -> None:
         timestamp = datetime.now().strftime("%H:%M:%S")
-        color = _LEVEL_COLORS.get(level, "#465070")
+        color = _LEVEL_COLORS.get(level, _LEVEL_COLORS["info"])
         prefix = _LEVEL_PREFIX.get(level, "·")
 
         cursor = self._text.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End)
 
         ts_fmt = QTextCharFormat()
-        ts_fmt.setForeground(QColor("#939ab0"))
+        ts_fmt.setForeground(QColor(C("ink4")))
         cursor.insertText(f"[{timestamp}] ", ts_fmt)
 
         msg_fmt = QTextCharFormat()

@@ -70,5 +70,6 @@
   "status_warning": "Внимание",
   "status_error": "Ошибка",
   "col_status": "Статус",
-  "categories": "категории"
+  "categories": "категории",
+  "theme_restart": "Тема будет применена после перезапуска приложения."
 }

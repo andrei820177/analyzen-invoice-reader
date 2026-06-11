@@ -70,5 +70,6 @@
   "status_warning": "Advarsel",
   "status_error": "Fejl",
   "col_status": "Status",
-  "categories": "kategorier"
+  "categories": "kategorier",
+  "theme_restart": "Temaet anvendes efter genstart af appen."
 }

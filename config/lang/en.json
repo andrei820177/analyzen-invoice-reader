@@ -82,5 +82,6 @@
   "status_warning": "Warning",
   "status_error": "Error",
   "col_status": "Status",
-  "categories": "categories"
+  "categories": "categories",
+  "theme_restart": "The theme will be applied after restarting the app."
 }

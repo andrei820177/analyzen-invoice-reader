@@ -70,5 +70,6 @@
   "status_warning": "Warnung",
   "status_error": "Fehler",
   "col_status": "Status",
-  "categories": "Kategorien"
+  "categories": "Kategorien",
+  "theme_restart": "Das Thema wird nach einem Neustart der App übernommen."
 }

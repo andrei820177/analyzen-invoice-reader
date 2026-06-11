@@ -1,6 +1,8 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QProgressBar, QWidget
 
+from ui.theme import C
+
 
 class ProcessingProgressBar(QWidget):
     def __init__(self, parent=None):
@@ -14,20 +16,20 @@ class ProcessingProgressBar(QWidget):
         self._bar.setValue(0)
         self._bar.setTextVisible(False)
         self._bar.setFixedHeight(6)
-        self._bar.setStyleSheet("""
-            QProgressBar {
-                background: #eeeff3;
+        self._bar.setStyleSheet(f"""
+            QProgressBar {{
+                background: {C('surface3')};
                 border-radius: 3px;
                 border: none;
-            }
-            QProgressBar::chunk {
-                background: #2f8f6b;
+            }}
+            QProgressBar::chunk {{
+                background: {C('accent')};
                 border-radius: 3px;
-            }
+            }}
         """)
 
         self._label = QLabel("0 / 0")
-        self._label.setStyleSheet("color:#6b7291;font-size:12px;")
+        self._label.setStyleSheet(f"color:{C('ink3')};font-size:12px;")
         self._label.setFixedWidth(60)
         self._label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
 

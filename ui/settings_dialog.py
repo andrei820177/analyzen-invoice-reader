@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 )
 from core.currency import SOURCE_LABELS
 from ui.components.widgets import NoScrollComboBox
+from ui.theme import C
 
 _SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "settings.json")
 
@@ -31,24 +32,24 @@ def _save(data: dict) -> None:
 
 _INPUT_STYLE = (
     "QLineEdit,QSpinBox,QDoubleSpinBox,QComboBox{"
-    "background:#fefefe;border:1px solid #e3e5ec;border-radius:8px;"
-    "padding:4px 8px;font-size:13px;color:#2e3552;min-height:28px;}"
+    f"background:{C('surface')};border:1px solid {C('line')};border-radius:8px;"
+    f"padding:4px 8px;font-size:13px;color:{C('ink')};min-height:28px;}}"
     "QLineEdit:focus,QSpinBox:focus,QDoubleSpinBox:focus,QComboBox:focus{"
-    "border-color:#2f8f6b;}"
+    f"border-color:{C('accent')};}}"
     "QComboBox::drop-down{border:none;width:22px;}"
     # dropdown popup: explicit colors so items are never white-on-white
     "QComboBox QAbstractItemView{"
-    "background:#fefefe;color:#2e3552;border:1px solid #e3e5ec;"
-    "selection-background-color:rgba(47,143,107,0.12);selection-color:#1a6b4f;}"
+    f"background:{C('surface')};color:{C('ink')};border:1px solid {C('line')};"
+    f"selection-background-color:{C('sel')};selection-color:{C('accent_ink')};}}"
     # flat, modern spin buttons (no 3D bevel); native Fusion arrows are kept
     "QSpinBox::up-button,QDoubleSpinBox::up-button{subcontrol-origin:border;"
     "subcontrol-position:top right;width:20px;border:none;"
-    "border-left:1px solid #e3e5ec;border-top-right-radius:8px;background:#f6f7f9;}"
+    f"border-left:1px solid {C('line')};border-top-right-radius:8px;background:{C('surface2')};}}"
     "QSpinBox::down-button,QDoubleSpinBox::down-button{subcontrol-origin:border;"
     "subcontrol-position:bottom right;width:20px;border:none;"
-    "border-left:1px solid #e3e5ec;border-bottom-right-radius:8px;background:#f6f7f9;}"
+    f"border-left:1px solid {C('line')};border-bottom-right-radius:8px;background:{C('surface2')};}}"
     "QSpinBox::up-button:hover,QDoubleSpinBox::up-button:hover,"
-    "QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{background:#e6f0eb;}"
+    f"QSpinBox::down-button:hover,QDoubleSpinBox::down-button:hover{{background:{C('accent_soft')};}}"
 )
 
 
@@ -58,9 +59,9 @@ class SettingsDialog(QDialog):
         self.setWindowTitle("Setari")
         self.setMinimumWidth(500)
         self.setStyleSheet(
-            "QDialog{background:#e2e6ed;}"
-            "QLabel{color:#2e3552;background:transparent;}"
-            "QCheckBox{color:#2e3552;background:transparent;}"
+            f"QDialog{{background:{C('desk')};}}"
+            f"QLabel{{color:{C('ink')};background:transparent;}}"
+            f"QCheckBox{{color:{C('ink')};background:transparent;}}"
         )
 
         self._settings = _load()
@@ -70,11 +71,11 @@ class SettingsDialog(QDialog):
         root.setSpacing(12)
 
         tabs = QTabWidget()
-        tabs.setStyleSheet("""
-            QTabWidget::pane{background:#fefefe;border:1px solid #e3e5ec;border-radius:8px;}
-            QTabBar::tab{background:#f4f5f8;color:#6b7291;padding:8px 16px;border:none;font-size:12px;}
-            QTabBar::tab:selected{background:#fefefe;color:#2f8f6b;font-weight:bold;
-              border-bottom:2px solid #2f8f6b;}
+        tabs.setStyleSheet(f"""
+            QTabWidget::pane{{background:{C('surface')};border:1px solid {C('line')};border-radius:8px;}}
+            QTabBar::tab{{background:{C('sidebar')};color:{C('ink3')};padding:8px 16px;border:none;font-size:12px;}}
+            QTabBar::tab:selected{{background:{C('surface')};color:{C('accent')};font-weight:bold;
+              border-bottom:2px solid {C('accent')};}}
         """)
 
         tabs.addTab(self._build_general_tab(), "General")
@@ -88,13 +89,13 @@ class SettingsDialog(QDialog):
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel
         )
-        buttons.setStyleSheet("""
-            QPushButton{background:#2f8f6b;color:white;border:none;border-radius:8px;
-              padding:8px 20px;font-size:13px;font-weight:600;}
-            QPushButton:hover{background:#1e7558;}
-            QPushButton[text="Cancel"]{background:#fefefe;color:#2e3552;
-              border:1px solid #e3e5ec;}
-            QPushButton[text="Cancel"]:hover{background:#eeeff3;}
+        buttons.setStyleSheet(f"""
+            QPushButton{{background:{C('accent')};color:white;border:none;border-radius:8px;
+              padding:8px 20px;font-size:13px;font-weight:600;}}
+            QPushButton:hover{{background:{C('accent_press')};}}
+            QPushButton[text="Cancel"]{{background:{C('surface')};color:{C('ink')};
+              border:1px solid {C('line')};}}
+            QPushButton[text="Cancel"]:hover{{background:{C('surface3')};}}
         """)
         buttons.accepted.connect(self._on_save)
         buttons.rejected.connect(self.reject)
@@ -129,15 +130,23 @@ class SettingsDialog(QDialog):
         lang_row.addStretch()
         form.addRow("Limba:", lang_row)
 
+        self._theme = NoScrollComboBox()
+        self._theme.setStyleSheet(_INPUT_STYLE)
+        self._theme.addItem("Luminos (light)", "light")
+        self._theme.addItem("Intunecat (dark)", "dark")
+        idx = self._theme.findData(self._settings.get("theme", "light"))
+        self._theme.setCurrentIndex(idx if idx >= 0 else 0)
+        form.addRow("Tema:", self._theme)
+
         watch_row = QHBoxLayout()
         self._watch_folder = QLineEdit(self._settings.get("watch_folder", ""))
         self._watch_folder.setStyleSheet(_INPUT_STYLE)
         browse_btn = QPushButton("...")
         browse_btn.setFixedWidth(36)
         browse_btn.setStyleSheet(
-            "QPushButton{background:#fefefe;border:1px solid #e3e5ec;"
+            f"QPushButton{{background:{C('surface')};border:1px solid {C('line')};"
             "border-radius:8px;padding:4px;}"
-            "QPushButton:hover{background:#eeeff3;}"
+            f"QPushButton:hover{{background:{C('surface3')};}}"
         )
         browse_btn.clicked.connect(self._browse_watch_folder)
         watch_row.addWidget(self._watch_folder, 1)
@@ -179,7 +188,7 @@ class SettingsDialog(QDialog):
             "Bank of England si Federal Reserve (SUA) nu ofera API public gratuit; "
             "pentru baza GBP sau USD folositi open.er-api, care suporta orice moneda."
         )
-        note.setStyleSheet("color:#6b7291;font-size:11px;")
+        note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
         note.setWordWrap(True)
         form.addRow("", note)
 
@@ -198,9 +207,9 @@ class SettingsDialog(QDialog):
         browse_btn = QPushButton("...")
         browse_btn.setFixedWidth(36)
         browse_btn.setStyleSheet(
-            "QPushButton{background:#fefefe;border:1px solid #e3e5ec;"
+            f"QPushButton{{background:{C('surface')};border:1px solid {C('line')};"
             "border-radius:8px;padding:4px;}"
-            "QPushButton:hover{background:#eeeff3;}"
+            f"QPushButton:hover{{background:{C('surface3')};}}"
         )
         browse_btn.clicked.connect(self._browse_tesseract)
         tess_row.addWidget(self._tesseract_path, 1)
@@ -211,7 +220,7 @@ class SettingsDialog(QDialog):
             "Tesseract OCR este necesar pentru facturile scanate.\n"
             "Descarca de la: https://github.com/UB-Mannheim/tesseract/wiki"
         )
-        note.setStyleSheet("color:#6b7291;font-size:11px;")
+        note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
         note.setWordWrap(True)
         form.addRow("", note)
 
@@ -292,7 +301,7 @@ class SettingsDialog(QDialog):
             "Consola de log arata pasii de procesare a facturilor (uz debug).\n"
             "Comutare rapida si din aplicatie: Ctrl+L."
         )
-        note.setStyleSheet("color:#6b7291;font-size:11px;")
+        note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
         note.setWordWrap(True)
         form.addRow("", note)
 
@@ -317,6 +326,7 @@ class SettingsDialog(QDialog):
         data = dict(self._settings)
         data.update({
             "language":                  lang,
+            "theme":                     self._theme.currentData(),
             "watch_folder":              self._watch_folder.text().strip(),
             "due_date_alert_days":       self._due_days.value(),
             "base_currency":             self._base_currency.currentText(),

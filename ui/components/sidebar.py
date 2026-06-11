@@ -9,6 +9,7 @@ from PyQt6.QtWidgets import (
 )
 from ui.components.language_toggle import LanguageToggle
 from ui.lang import L
+from ui.theme import C
 
 _NAV_KEYS = [
     ("dashboard", "nav_dashboard"),
@@ -18,10 +19,10 @@ _NAV_KEYS = [
 
 _INACTIVE_ROW = (
     "#navrow{background:transparent;border:1px solid transparent;border-radius:8px;}"
-    "#navrow:hover{background:#eceef3;}"
+    f"#navrow:hover{{background:{C('surface3')};}}"
 )
 _ACTIVE_ROW = (
-    "#navrow{background:#fefefe;border:1px solid #e3e5ec;border-radius:8px;}"
+    f"#navrow{{background:{C('surface')};border:1px solid {C('line')};border-radius:8px;}}"
 )
 
 
@@ -51,14 +52,14 @@ class _NavItem(QFrame):
 
     def _apply(self) -> None:
         self.setStyleSheet(_ACTIVE_ROW if self._active else _INACTIVE_ROW)
-        color = "#2e3552" if self._active else "#5d6480"
+        color = C("ink") if self._active else C("ink2")
         self._label.setStyleSheet(
             f"color:{color};font-size:13px;font-weight:600;"
             "background:transparent;border:none;"
         )
         if self._badge.text():
-            bg = "#e6f0eb" if self._active else "#e9ebf1"
-            fg = "#1a6b4f" if self._active else "#6b7291"
+            bg = C("accent_soft") if self._active else C("surface3")
+            fg = C("accent_ink") if self._active else C("ink3")
             self._badge.setStyleSheet(
                 f"background:{bg};color:{fg};font-size:11px;font-weight:700;"
                 "padding:1px 7px;border-radius:9px;border:none;"
@@ -86,12 +87,11 @@ class _NavItem(QFrame):
 class _HealthBar(QWidget):
     """Proportional valid/warning/error bar (.bar with ok/w/e segments)."""
 
-    _COLORS = ("#2f8f6b", "#d8a72e", "#e2483a")
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setFixedHeight(7)
         self._counts = (0, 0, 0)
+        self._colors = (C("ok"), C("warn"), C("err"))
 
     def set_counts(self, valid: int, warning: int, error: int) -> None:
         self._counts = (valid, warning, error)
@@ -102,7 +102,7 @@ class _HealthBar(QWidget):
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
         rect = self.rect()
         p.setPen(Qt.PenStyle.NoPen)
-        p.setBrush(QColor("#eceef3"))
+        p.setBrush(QColor(C("surface3")))
         p.drawRoundedRect(QRectF(rect), 3.5, 3.5)
 
         total = sum(self._counts)
@@ -113,7 +113,7 @@ class _HealthBar(QWidget):
         p.setClipPath(path)
         x = 0.0
         w = rect.width()
-        for cnt, color in zip(self._counts, self._COLORS):
+        for cnt, color in zip(self._counts, self._colors):
             if cnt <= 0:
                 continue
             seg = w * cnt / total
@@ -129,7 +129,7 @@ class _SummaryCard(QFrame):
         super().__init__(parent)
         self.setObjectName("sumcard")
         self.setStyleSheet(
-            "#sumcard{background:#fefefe;border:1px solid #e3e5ec;border-radius:11px;}"
+            f"#sumcard{{background:{C('surface')};border:1px solid {C('line')};border-radius:11px;}}"
         )
         v = QVBoxLayout(self)
         v.setContentsMargins(13, 12, 13, 12)
@@ -137,11 +137,11 @@ class _SummaryCard(QFrame):
 
         self._lab = QLabel(L().t("side_total"))
         self._lab.setStyleSheet(
-            "color:#6b7291;font-size:11px;font-weight:600;background:transparent;border:none;"
+            f"color:{C('ink3')};font-size:11px;font-weight:600;background:transparent;border:none;"
         )
         self._big = QLabel("0")
         self._big.setStyleSheet(
-            "color:#2e3552;font-size:20px;font-weight:800;letter-spacing:-0.02em;"
+            f"color:{C('ink')};font-size:20px;font-weight:800;letter-spacing:-0.02em;"
             "background:transparent;border:none;"
         )
 
@@ -176,12 +176,12 @@ class _SummaryCard(QFrame):
             h.setSpacing(6)
             code_lbl = QLabel(code)
             code_lbl.setStyleSheet(
-                "color:#939ab0;font-size:11px;font-weight:700;"
+                f"color:{C('ink4')};font-size:11px;font-weight:700;"
                 "letter-spacing:0.04em;background:transparent;border:none;"
             )
             amt_lbl = QLabel(amount)
             amt_lbl.setStyleSheet(
-                "color:#2e3552;font-size:11.5px;font-weight:600;"
+                f"color:{C('ink')};font-size:11.5px;font-weight:600;"
                 "background:transparent;border:none;"
             )
             amt_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
@@ -205,7 +205,7 @@ class Sidebar(QWidget):
         self.setFixedWidth(234)
         self.setObjectName("Sidebar")
         self.setStyleSheet(
-            "QWidget#Sidebar { background: #f4f5f8; border-right: 1px solid #e3e5ec; }"
+            f"QWidget#Sidebar {{ background: {C('sidebar')}; border-right: 1px solid {C('line')}; }}"
         )
 
         root = QVBoxLayout(self)
@@ -226,7 +226,7 @@ class Sidebar(QWidget):
         brand_mark.setStyleSheet(
             "QLabel {"
             "  background: qlineargradient(x1:0,y1:0,x2:1,y2:1,"
-            "    stop:0 #2f8f6b, stop:1 #1e7558);"
+            f"    stop:0 {C('accent')}, stop:1 {C('accent_press')});"
             "  border-radius: 8px;"
             "  color: white;"
             "  font-size: 14px;"
@@ -241,10 +241,10 @@ class Sidebar(QWidget):
         bt_layout.setSpacing(0)
         self._logo_title = QLabel("Analyzen")
         self._logo_title.setStyleSheet(
-            "color: #2e3552; font-size: 15px; font-weight: 800; letter-spacing: -0.01em;"
+            f"color: {C('ink')}; font-size: 15px; font-weight: 800; letter-spacing: -0.01em;"
         )
         self._logo_sub = QLabel("Invoice Reader")
-        self._logo_sub.setStyleSheet("color: #939ab0; font-size: 11px; margin-top: -1px;")
+        self._logo_sub.setStyleSheet(f"color: {C('ink4')}; font-size: 11px; margin-top: -1px;")
         bt_layout.addWidget(self._logo_title)
         bt_layout.addWidget(self._logo_sub)
 
@@ -255,14 +255,14 @@ class Sidebar(QWidget):
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("background: #e3e5ec; max-height: 1px; margin: 0;")
+        sep.setStyleSheet(f"background: {C('line')}; max-height: 1px; margin: 0;")
         root.addWidget(sep)
         root.addSpacing(8)
 
         # Section header (.side-h in reference)
         self._section_lbl = QLabel("MENU")
         self._section_lbl.setStyleSheet(
-            "color: #939ab0; font-size: 10px; font-weight: 700;"
+            f"color: {C('ink4')}; font-size: 10px; font-weight: 700;"
             " letter-spacing: 1px; padding: 4px 8px 2px 8px; background: transparent;"
         )
         root.addWidget(self._section_lbl)
@@ -294,9 +294,9 @@ class Sidebar(QWidget):
             "QPushButton {"
             "  text-align: left; padding: 7px 9px; margin: 1px 0px;"
             "  border: 1px solid transparent; border-radius: 8px;"
-            "  font-size: 13px; font-weight: 600; color: #5d6480; background: #f4f5f8;"
+            f"  font-size: 13px; font-weight: 600; color: {C('ink2')}; background: {C('sidebar')};"
             "}"
-            "QPushButton:hover { background: #eceef3; color: #2e3552; }"
+            f"QPushButton:hover {{ background: {C('surface3')}; color: {C('ink')}; }}"
         )
         self._settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._settings_btn.clicked.connect(self.settings_requested)

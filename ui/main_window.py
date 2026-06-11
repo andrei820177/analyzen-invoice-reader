@@ -28,6 +28,7 @@ from ui.lang import L, init_lang
 from ui.log_panel import LogPanel
 from ui.settings_dialog import SettingsDialog
 from ui.table_view import InvoiceTableView
+from ui.theme import C
 
 _SETTINGS_PATH = os.path.join(os.path.dirname(__file__), "..", "config", "settings.json")
 
@@ -97,32 +98,32 @@ class DropZone(QWidget):
         self._card = QFrame()
         self._card.setFixedSize(360, 290)
         self._card.setStyleSheet(
-            "QFrame { background: #fefefe; border-radius: 11px; border: 2px dashed #c0ddd4; }"
+            f"QFrame {{ background: {C('surface')}; border-radius: 11px; border: 2px dashed {C('accent')}; }}"
         )
         card_layout = QVBoxLayout(self._card)
         card_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         card_layout.setSpacing(10)
 
         arrow = QLabel("↓")
-        arrow.setStyleSheet("color: #2f8f6b; font-size: 44px; font-weight: bold; border: none;")
+        arrow.setStyleSheet(f"color: {C('accent')}; font-size: 44px; font-weight: bold; border: none;")
         arrow.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._title = QLabel(L().t("drop_zone_title"))
-        self._title.setStyleSheet("color: #2e3552; font-size: 15px; font-weight: 700; border: none;")
+        self._title.setStyleSheet(f"color: {C('ink')}; font-size: 15px; font-weight: 700; border: none;")
         self._title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._title.setWordWrap(True)
 
         self._subtitle = QLabel(L().t("drop_zone_subtitle"))
-        self._subtitle.setStyleSheet("color: #6b7291; font-size: 12px; border: none;")
+        self._subtitle.setStyleSheet(f"color: {C('ink3')}; font-size: 12px; border: none;")
         self._subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self._btn = QPushButton(L().t("btn_open_files"))
         self._btn.setFixedSize(210, 40)
         self._btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._btn.setStyleSheet(
-            "QPushButton { background: #2f8f6b; color: white; border-radius: 8px;"
+            f"QPushButton {{ background: {C('accent')}; color: {C('on_accent')}; border-radius: 8px;"
             " border: none; font-size: 13px; font-weight: 600; }"
-            "QPushButton:hover { background: #1e7558; }"
+            f"QPushButton:hover {{ background: {C('accent_press')}; }}"
         )
         self._btn.clicked.connect(self._open_file_dialog)
 
@@ -175,12 +176,12 @@ class ExportPage(QWidget):
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self._title_lbl = QLabel(L().t("nav_export"))
-        self._title_lbl.setStyleSheet("color: #2e3552; font-size: 18px; font-weight: 700;")
+        self._title_lbl.setStyleSheet(f"color: {C('ink')}; font-size: 18px; font-weight: 700;")
         layout.addWidget(self._title_lbl)
 
         sep = QFrame()
         sep.setFrameShape(QFrame.Shape.HLine)
-        sep.setStyleSheet("background: #e3e5ec; max-height: 1px;")
+        sep.setStyleSheet(f"background: {C('line')}; max-height: 1px;")
         layout.addWidget(sep)
         layout.addSpacing(8)
 
@@ -269,37 +270,37 @@ class MainWindow(QMainWindow):
         # generous lower bound so the app stays usable on smaller resolutions
         self.setMinimumSize(880, 560)
         self.resize(1280, 800)
-        self.setStyleSheet("""
-            QMainWindow { background: #e2e6ed; }
-            QWidget { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: #2e3552; }
+        self.setStyleSheet(f"""
+            QMainWindow {{ background: {C('desk')}; }}
+            QWidget {{ font-family: 'Segoe UI', system-ui, sans-serif; font-size: 13px; color: {C('ink')}; }}
 
-            QScrollBar:vertical {
+            QScrollBar:vertical {{
                 background: transparent;
                 width: 8px;
                 margin: 2px 2px 2px 0;
-            }
-            QScrollBar::handle:vertical {
-                background: #cdd0db;
+            }}
+            QScrollBar::handle:vertical {{
+                background: {C('scroll')};
                 border-radius: 4px;
                 min-height: 30px;
-            }
-            QScrollBar::handle:vertical:hover { background: #adb1c2; }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }
+            }}
+            QScrollBar::handle:vertical:hover {{ background: {C('scroll_hover')}; }}
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
 
-            QScrollBar:horizontal {
+            QScrollBar:horizontal {{
                 background: transparent;
                 height: 8px;
                 margin: 0 2px 2px 2px;
-            }
-            QScrollBar::handle:horizontal {
-                background: #cdd0db;
+            }}
+            QScrollBar::handle:horizontal {{
+                background: {C('scroll')};
                 border-radius: 4px;
                 min-width: 30px;
-            }
-            QScrollBar::handle:horizontal:hover { background: #adb1c2; }
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal { width: 0; }
-            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal { background: none; }
+            }}
+            QScrollBar::handle:horizontal:hover {{ background: {C('scroll_hover')}; }}
+            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
+            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: none; }}
         """)
 
         self._idf = InvoiceDataFrame()
@@ -334,7 +335,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self._sidebar)
 
         content_frame = QWidget()
-        content_frame.setStyleSheet("background: #e2e6ed;")
+        content_frame.setStyleSheet(f"background: {C('desk')};")
         content_layout = QVBoxLayout(content_frame)
         content_layout.setContentsMargins(0, 0, 0, 0)
         content_layout.setSpacing(0)
@@ -343,14 +344,14 @@ class MainWindow(QMainWindow):
         self._header = QWidget()
         self._header.setFixedHeight(56)
         self._header.setStyleSheet(
-            "background: #fefefe; border-bottom: 1px solid #e3e5ec;"
+            f"background: {C('header')}; border-bottom: 1px solid {C('line')};"
         )
         hl = QHBoxLayout(self._header)
         hl.setContentsMargins(24, 0, 16, 0)
         hl.setSpacing(8)
 
         self._page_title = QLabel(L().t("nav_dashboard"))
-        self._page_title.setStyleSheet("color: #2e3552; font-size: 15px; font-weight: 700;")
+        self._page_title.setStyleSheet(f"color: {C('ink')}; font-size: 15px; font-weight: 700;")
         hl.addWidget(self._page_title)
         hl.addStretch()
 
@@ -368,7 +369,7 @@ class MainWindow(QMainWindow):
         # Progress strip
         self._progress_strip = QWidget()
         self._progress_strip.setFixedHeight(16)
-        self._progress_strip.setStyleSheet("background: #fefefe; border-bottom: 1px solid #e3e5ec;")
+        self._progress_strip.setStyleSheet(f"background: {C('header')}; border-bottom: 1px solid {C('line')};")
         ps_layout = QHBoxLayout(self._progress_strip)
         ps_layout.setContentsMargins(24, 4, 24, 4)
         self._progress_bar = ProcessingProgressBar()
@@ -406,17 +407,17 @@ class MainWindow(QMainWindow):
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         if primary:
             btn.setStyleSheet(
-                "QPushButton { background: #2f8f6b; color: white; border-radius: 8px;"
+                f"QPushButton {{ background: {C('accent')}; color: {C('on_accent')}; border-radius: 8px;"
                 " border: none; font-size: 12px; font-weight: 600; padding: 0 14px; }"
-                "QPushButton:hover { background: #1e7558; }"
-                "QPushButton:disabled { background: #a8cfc0; color: #e8e8e8; }"
+                f"QPushButton:hover {{ background: {C('accent_press')}; }}"
+                f"QPushButton:disabled {{ background: {C('accent_soft')}; color: {C('ink4')}; }}"
             )
         else:
             btn.setStyleSheet(
-                "QPushButton { background: #fefefe; color: #2e3552; border-radius: 8px;"
-                " border: 1px solid #e3e5ec; font-size: 12px; font-weight: 600; padding: 0 14px; }"
-                "QPushButton:hover { background: #eeeff3; }"
-                "QPushButton:disabled { color: #939ab0; }"
+                f"QPushButton {{ background: {C('surface')}; color: {C('ink')}; border-radius: 8px;"
+                f" border: 1px solid {C('line')}; font-size: 12px; font-weight: 600; padding: 0 14px; }}"
+                f"QPushButton:hover {{ background: {C('surface3')}; }}"
+                f"QPushButton:disabled {{ color: {C('ink4')}; }}"
             )
         return btn
 
@@ -657,9 +658,14 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _open_settings(self) -> None:
+        old_theme = _load_settings().get("theme", "light")
         dlg = SettingsDialog(self)
         if dlg.exec():
             settings = _load_settings()
+            if settings.get("theme", "light") != old_theme:
+                QMessageBox.information(
+                    self, L().t("app_title"), L().t("theme_restart")
+                )
             new_lang = settings.get("language", "ro")
             if new_lang != L().code:
                 L().load(new_lang)

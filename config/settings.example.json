@@ -5,6 +5,7 @@
   "outlier_std_dev_multiplier": 2.0,
   "tesseract_path": "",
   "language": "ro",
+  "theme": "light",
   "base_currency": "RON",
   "fx_source": "BNR",
   "smtp_host": "",

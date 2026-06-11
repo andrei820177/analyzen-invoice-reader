@@ -70,5 +70,6 @@
   "status_warning": "Uwaga",
   "status_error": "Błąd",
   "col_status": "Status",
-  "categories": "kategorie"
+  "categories": "kategorie",
+  "theme_restart": "Motyw zostanie zastosowany po ponownym uruchomieniu aplikacji."
 }

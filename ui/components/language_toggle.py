@@ -1,6 +1,8 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QComboBox, QHBoxLayout, QLabel, QWidget
 
+from ui.theme import C
+
 _LANGUAGES = [
     ("ro", "Română"),
     ("en", "English"),
@@ -26,30 +28,30 @@ class LanguageToggle(QWidget):
         layout.setSpacing(6)
 
         lbl = QLabel("Lang:")
-        lbl.setStyleSheet("color:#939ab0;font-size:10px;font-weight:700;background:transparent;")
+        lbl.setStyleSheet(f"color:{C('ink4')};font-size:10px;font-weight:700;background:transparent;")
         layout.addWidget(lbl)
 
         self._combo = QComboBox()
-        self._combo.setStyleSheet("""
-            QComboBox {
-                background: #fefefe;
-                color: #2e3552;
-                border: 1px solid #e3e5ec;
+        self._combo.setStyleSheet(f"""
+            QComboBox {{
+                background: {C('surface')};
+                color: {C('ink')};
+                border: 1px solid {C('line')};
                 border-radius: 8px;
                 padding: 3px 8px;
                 font-size: 11px;
                 font-weight: 600;
                 min-width: 100px;
-            }
-            QComboBox:focus { border-color: #2f8f6b; }
-            QComboBox::drop-down { border: none; }
-            QComboBox QAbstractItemView {
-                background: #fefefe;
-                color: #2e3552;
-                selection-background-color: rgba(47,143,107,0.12);
-                selection-color: #1a6b4f;
-                border: 1px solid #e3e5ec;
-            }
+            }}
+            QComboBox:focus {{ border-color: {C('accent')}; }}
+            QComboBox::drop-down {{ border: none; }}
+            QComboBox QAbstractItemView {{
+                background: {C('surface')};
+                color: {C('ink')};
+                selection-background-color: {C('sel')};
+                selection-color: {C('accent_ink')};
+                border: 1px solid {C('line')};
+            }}
         """)
 
         for code, label in _LANGUAGES:

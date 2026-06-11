@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 )
 
 from core.ocr_lang_manager import download_for_lang, get_missing_packs
+from ui.theme import C
 
 
 class _DownloadSignals(QObject):
@@ -31,7 +32,7 @@ class OcrLangDialog(QDialog):
 
         self.setWindowTitle("Pachete OCR lipsă")
         self.setMinimumWidth(420)
-        self.setStyleSheet("QDialog{background:#f4f7f5;}")
+        self.setStyleSheet(f"QDialog{{background:{C('desk')};}}")
 
         root = QVBoxLayout(self)
         root.setContentsMargins(20, 20, 20, 20)
@@ -44,12 +45,12 @@ class OcrLangDialog(QDialog):
             f"Descarcă automat de pe GitHub (~5-10 MB fiecare)?"
         )
         info.setWordWrap(True)
-        info.setStyleSheet("color:#1a2332;font-size:13px;")
+        info.setStyleSheet(f"color:{C('ink')};font-size:13px;")
         info.setTextFormat(Qt.TextFormat.RichText)
         root.addWidget(info)
 
         self._status = QLabel("")
-        self._status.setStyleSheet("color:#6b8a7a;font-size:12px;")
+        self._status.setStyleSheet(f"color:{C('ink3')};font-size:12px;")
         root.addWidget(self._status)
 
         self._bar = QProgressBar()
@@ -57,9 +58,9 @@ class OcrLangDialog(QDialog):
         self._bar.setValue(0)
         self._bar.setTextVisible(True)
         self._bar.setFixedHeight(8)
-        self._bar.setStyleSheet("""
-            QProgressBar{background:#e0e8e4;border-radius:4px;border:none;}
-            QProgressBar::chunk{background:#2f8f6b;border-radius:4px;}
+        self._bar.setStyleSheet(f"""
+            QProgressBar{{background:{C('surface3')};border-radius:4px;border:none;color:{C('ink')};}}
+            QProgressBar::chunk{{background:{C('accent')};border-radius:4px;}}
         """)
         self._bar.setVisible(False)
         root.addWidget(self._bar)
@@ -72,13 +73,13 @@ class OcrLangDialog(QDialog):
             "Continuă fără OCR", QDialogButtonBox.ButtonRole.RejectRole
         )
         self._dl_btn.setStyleSheet(
-            "QPushButton{background:#2f8f6b;color:white;border-radius:6px;"
+            f"QPushButton{{background:{C('accent')};color:white;border-radius:6px;"
             "border:none;padding:8px 18px;font-size:13px;}"
-            "QPushButton:hover{background:#1e7558;}"
-            "QPushButton:disabled{background:#a8cfc0;}"
+            f"QPushButton:hover{{background:{C('accent_press')};}}"
+            f"QPushButton:disabled{{background:{C('accent_soft')};}}"
         )
         self._skip_btn.setStyleSheet(
-            "QPushButton{background:#e0e8e4;color:#1a2332;border-radius:6px;"
+            f"QPushButton{{background:{C('surface3')};color:{C('ink')};border-radius:6px;"
             "border:none;padding:8px 18px;font-size:13px;}"
         )
         self._buttons.accepted.connect(self._start_download)

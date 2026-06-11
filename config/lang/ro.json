@@ -82,5 +82,6 @@
   "status_warning": "Atentie",
   "status_error": "Eroare",
   "col_status": "Status",
-  "categories": "categorii"
+  "categories": "categorii",
+  "theme_restart": "Tema va fi aplicata la repornirea aplicatiei."
 }

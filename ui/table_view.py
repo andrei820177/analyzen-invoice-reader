@@ -15,6 +15,7 @@ from PyQt6.QtWidgets import (
 from data.processor import row_status
 from ui.detail_drawer import DetailDrawer
 from ui.lang import L
+from ui.theme import C
 
 _COL_DEFS = [
     ("supplier_name",    "col_supplier"),
@@ -41,12 +42,12 @@ _REQUIRED = {"supplier_name", "invoice_number", "issue_date", "total"}
 _STATUS_ROLE = Qt.ItemDataRole.UserRole       # status key for the pill delegate
 _SORT_ROLE   = Qt.ItemDataRole.UserRole + 1   # numeric/normalized sort key
 
-_EMPTY_RED = QColor("#b3261e")
+_EMPTY_RED = QColor(C("err_ink"))
 
-# soft state tints from reference.html (--err-soft / --warn-soft)
-_FLAG_RED    = QColor("#faeae7")
-_FLAG_ORANGE = QColor("#f9f0dd")
-_FLAG_YELLOW = QColor("#fbf6e4")
+# soft state tints (--err-soft / --warn-soft)
+_FLAG_RED    = QColor(C("err_soft"))
+_FLAG_ORANGE = QColor(C("warn_soft"))
+_FLAG_YELLOW = QColor(C("warn_soft"))
 
 _STATUS_RANK = {"error": 0, "warning": 1, "valid": 2}
 
@@ -56,14 +57,14 @@ _FILTER_KEYS = [
 ]
 
 # pill filter chips (.fchip / .fchip.on in reference)
-_CHIP_STYLE = """
-    QPushButton {
-        background: #fefefe; color: #5d6480;
-        border: 1px solid #e3e5ec; border-radius: 14px;
+_CHIP_STYLE = f"""
+    QPushButton {{
+        background: {C('surface')}; color: {C('ink2')};
+        border: 1px solid {C('line')}; border-radius: 14px;
         padding: 0 12px; font-size: 12px; font-weight: 600;
-    }
-    QPushButton:hover { background: #f6f7f9; }
-    QPushButton:checked { background: #2e3552; color: white; border-color: #2e3552; }
+    }}
+    QPushButton:hover {{ background: {C('surface2')}; }}
+    QPushButton:checked {{ background: {C('ink')}; color: {C('surface')}; border-color: {C('ink')}; }}
 """
 
 
@@ -202,9 +203,9 @@ class StatusPillDelegate(QStyledItemDelegate):
     """Paints valid/warning/error as a coloured pill with a dot (.stat in reference)."""
 
     _STYLE = {
-        "valid":   ("#e3f1ea", "#1a6b4f", "#2f8f6b"),
-        "warning": ("#f9f0dd", "#8a6d1a", "#d8a72e"),
-        "error":   ("#faeae7", "#b3261e", "#e2483a"),
+        "valid":   (C("accent_soft"), C("accent_ink"), C("ok")),
+        "warning": (C("warn_soft"), C("warn_ink"), C("warn")),
+        "error":   (C("err_soft"), C("err_ink"), C("err")),
     }
 
     def paint(self, painter, option, index):
@@ -281,7 +282,7 @@ class VendorAvatarDelegate(QStyledItemDelegate):
 
         tx = x + size + 9
         painter.setFont(option.font)
-        painter.setPen(QColor("#2e3552"))
+        painter.setPen(QColor(C("ink")))
         fm = QFontMetrics(option.font)
         elided = fm.elidedText(name, Qt.TextElideMode.ElideRight,
                                r.right() - tx - 6)
@@ -314,9 +315,9 @@ class InvoiceTableView(QWidget):
         self._search.setFixedHeight(32)
         self._search.setFixedWidth(230)
         self._search.setStyleSheet(
-            "QLineEdit { background: #f0f1f5; border: 1px solid #e3e5ec; border-radius: 8px;"
-            " padding: 0 10px; font-size: 13px; color: #2e3552; }"
-            "QLineEdit:focus { border-color: #2f8f6b; background: #fefefe; }"
+            f"QLineEdit {{ background: {C('surface3')}; border: 1px solid {C('line')}; border-radius: 8px;"
+            f" padding: 0 10px; font-size: 13px; color: {C('ink')}; }}"
+            f"QLineEdit:focus {{ border-color: {C('accent')}; background: {C('surface')}; }}"
         )
 
         # Filter chips (.fchip pills in reference)
@@ -334,7 +335,7 @@ class InvoiceTableView(QWidget):
 
         self._count_label = QLabel("0")
         self._count_label.setStyleSheet(
-            "color: #6b7291; font-size: 12px; font-weight: 600; background: transparent;"
+            f"color: {C('ink3')}; font-size: 12px; font-weight: 600; background: transparent;"
         )
 
         fb_layout.addWidget(self._search)
@@ -367,23 +368,23 @@ class InvoiceTableView(QWidget):
         self._table.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self._table.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self._table.verticalScrollBar().setSingleStep(12)
-        self._table.setStyleSheet("""
-            QTableView {
-                background: #fefefe; border: 1px solid #e3e5ec; border-radius: 11px;
-                font-size: 12px; color: #2e3552;
-                selection-background-color: rgba(47,143,107,0.12); selection-color: #1a6b4f;
-            }
-            QHeaderView::section {
-                background: #f6f7f9; color: #6b7291; font-weight: 700;
+        self._table.setStyleSheet(f"""
+            QTableView {{
+                background: {C('surface')}; border: 1px solid {C('line')}; border-radius: 11px;
+                font-size: 12px; color: {C('ink')};
+                selection-background-color: {C('sel')}; selection-color: {C('accent_ink')};
+            }}
+            QHeaderView::section {{
+                background: {C('surface2')}; color: {C('ink3')}; font-weight: 700;
                 font-size: 10px; padding: 9px 8px; border: none;
-                border-bottom: 1px solid #e3e5ec;
-            }
-            QTableView::item {
+                border-bottom: 1px solid {C('line')};
+            }}
+            QTableView::item {{
                 padding: 0 6px;
-                border-bottom: 1px solid #f0f1f5;
-            }
-            QTableView::item:hover { background: #f6f7f9; }
-            QTableView::item:selected { background: rgba(47,143,107,0.12); color: #1a6b4f; }
+                border-bottom: 1px solid {C('line2')};
+            }}
+            QTableView::item:hover {{ background: {C('surface2')}; }}
+            QTableView::item:selected {{ background: {C('sel')}; color: {C('accent_ink')}; }}
         """)
 
         widths = [200, 110, 95, 95, 95, 60, 85, 100, 110, 80, 150]

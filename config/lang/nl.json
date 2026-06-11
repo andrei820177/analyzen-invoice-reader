@@ -70,5 +70,6 @@
   "status_warning": "Let op",
   "status_error": "Fout",
   "col_status": "Status",
-  "categories": "categorieën"
+  "categories": "categorieën",
+  "theme_restart": "Het thema wordt toegepast na het herstarten van de app."
 }

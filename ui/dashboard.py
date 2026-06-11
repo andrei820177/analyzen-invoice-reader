@@ -13,14 +13,18 @@ from PyQt6.QtWidgets import (
 )
 from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
+from ui.theme import C
 
-_PRIMARY  = "#2f8f6b"
-_INK      = "#2e3552"
-_SURFACE  = "#fefefe"
-_BORDER   = "#e3e5ec"
+_PRIMARY  = C("accent")
+_INK      = C("ink")
+_SURFACE  = C("surface")
+_BORDER   = C("line")
+_MUTED    = C("ink3")
+_FAINT    = C("ink4")
+_GRID     = C("line2")
 _CATEGORY_COLORS = [
-    "#2f8f6b", "#3498db", "#e74c3c", "#f39c12",
-    "#9b59b6", "#1abc9c", "#e67e22", "#34495e",
+    C("accent"), "#3498db", "#e74c3c", "#f39c12",
+    "#9b59b6", "#1abc9c", "#e67e22", "#5b6cc4",
 ]
 
 
@@ -42,7 +46,7 @@ class KpiCard(QFrame):
 
         self._title_lbl = QLabel(L().t(title_key))
         self._title_lbl.setStyleSheet(
-            "color: #6b7291; font-size: 11px; font-weight: 700; "
+            f"color: {_MUTED}; font-size: 11px; font-weight: 700; "
             "letter-spacing: 0.5px; background: transparent; border: none;"
         )
         self._value_lbl = QLabel(value)
@@ -162,7 +166,7 @@ class PieChartWidget(QWidget):
                    int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom),
                    str(len(self._data)))
         sub_font = QFont(); sub_font.setPointSize(8)
-        p.setFont(sub_font); p.setPen(QColor("#939ab0"))
+        p.setFont(sub_font); p.setPen(QColor(_FAINT))
         p.drawText(QRectF(dx, dy + d / 2 + 2, d, 16),
                    int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
                    L().t("categories"))
@@ -182,7 +186,7 @@ class PieChartWidget(QWidget):
                 ry = ly + i * rh
                 if i == self._hover:           # highlight the hovered row
                     p.setPen(Qt.PenStyle.NoPen)
-                    p.setBrush(QColor("#f0f1f5"))
+                    p.setBrush(QColor(C("surface3")))
                     p.drawRoundedRect(QRectF(lx - 4, ry + 1, lw + 4, rh - 2), 5, 5)
                 p.setPen(Qt.PenStyle.NoPen)
                 p.setBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)]))
@@ -194,7 +198,7 @@ class PieChartWidget(QWidget):
                            int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
                            fm.elidedText(cat, Qt.TextElideMode.ElideRight, int(name_w)))
 
-                p.setFont(pct_font); p.setPen(QColor("#6b7291"))
+                p.setFont(pct_font); p.setPen(QColor(_MUTED))
                 p.drawText(QRectF(lx + lw - 40, ry, 40, rh),
                            int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight),
                            f"{val / total * 100:.0f}%")
@@ -216,7 +220,7 @@ def _fmt_compact(v: float) -> str:
 
 
 def _empty_message(painter: QPainter, rect, text: str) -> None:
-    painter.setPen(QColor("#939ab0"))
+    painter.setPen(QColor(_FAINT))
     f = QFont()
     f.setPointSize(10)
     painter.setFont(f)
@@ -247,8 +251,8 @@ def _draw_tooltip(p: QPainter, bounds, pos: QPointF,
     p.setPen(Qt.PenStyle.NoPen)
     p.setBrush(QColor(16, 24, 40, 32))                 # soft shadow
     p.drawRoundedRect(QRectF(x + 1, y + 3, w, h), 8, 8)
-    p.setBrush(QColor("#ffffff"))
-    p.setPen(QPen(QColor("#d6d9e3"), 1))               # contour
+    p.setBrush(QColor(_SURFACE))
+    p.setPen(QPen(QColor(C("tooltip_border")), 1))               # contour
     p.drawRoundedRect(QRectF(x, y, w, h), 8, 8)
 
     tx = x + pad
@@ -261,7 +265,7 @@ def _draw_tooltip(p: QPainter, bounds, pos: QPointF,
     p.drawText(QRectF(tx, y + pad - 1, w, fmt.height() + 2),
                int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), title)
     if subtitle:
-        p.setFont(sf); p.setPen(QColor("#6b7291"))
+        p.setFont(sf); p.setPen(QColor(_MUTED))
         p.drawText(QRectF(x + pad, y + pad + fmt.height(), w, fms.height() + 2),
                    int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), subtitle)
 
@@ -334,7 +338,7 @@ class BarChartWidget(QWidget):
         bars = []
 
         # subtle horizontal gridlines
-        p.setPen(QPen(QColor("#eef0f4")))
+        p.setPen(QPen(QColor(_GRID)))
         for gi in range(1, 4):
             yy = mt + ph * gi / 4
             p.drawLine(int(ml), int(yy), int(ml + pw), int(yy))
@@ -362,7 +366,7 @@ class BarChartWidget(QWidget):
 
             # x-axis label: rotated 45° (full date) or centred when it fits
             p.setFont(lab_font)
-            p.setPen(QColor("#6b7291"))
+            p.setPen(QColor(_MUTED))
             if rotate:
                 p.save()
                 p.translate(cx, axis_y + 6)
@@ -453,7 +457,7 @@ class HBarChartWidget(QWidget):
 
             if i == self._hover:
                 p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(QColor("#f6f7f9"))
+                p.setBrush(QColor(C("surface2")))
                 p.drawRoundedRect(QRectF(2, y + 1, W - 4, row_h - 2), 5, 5)
 
             p.setFont(name_font)
@@ -470,7 +474,7 @@ class HBarChartWidget(QWidget):
             p.drawRoundedRect(QRectF(label_w, by, bw, bh), 4, 4)
 
             p.setFont(val_font)
-            p.setPen(QColor("#6b7291"))
+            p.setPen(QColor(_MUTED))
             p.drawText(QRectF(label_w + bw + 6, y, val_w, row_h),
                        int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
                        _fmt_compact(val))
@@ -576,13 +580,13 @@ class DashboardPage(QWidget):
         self._fx_bar = QWidget()
         self._fx_bar.setFixedHeight(24)
         self._fx_bar.setStyleSheet(
-            "background: #f6f7f9; border-top: 1px solid #e3e5ec;"
+            f"background: {C('surface2')}; border-top: 1px solid {C('line')};"
         )
         fx_layout = QHBoxLayout(self._fx_bar)
         fx_layout.setContentsMargins(16, 0, 16, 0)
         self._fx_label = QLabel()
         self._fx_label.setStyleSheet(
-            "color: #939ab0; font-size: 10px; background: transparent;"
+            f"color: {_FAINT}; font-size: 10px; background: transparent;"
         )
         fx_layout.addWidget(self._fx_label)
         fx_layout.addStretch()

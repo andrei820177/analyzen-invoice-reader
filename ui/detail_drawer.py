@@ -19,26 +19,27 @@ from PyQt6.QtWidgets import (
 )
 from ui.components.widgets import NoScrollComboBox
 from ui.lang import L
+from ui.theme import C
 
-_INK     = "#2e3552"
-_MUTED   = "#6b7291"
-_FAINT   = "#939ab0"
-_LINE    = "#e3e5ec"
-_SURFACE = "#fefefe"
-_ACCENT  = "#2f8f6b"
+_INK     = C("ink")
+_MUTED   = C("ink3")
+_FAINT   = C("ink4")
+_LINE    = C("line")
+_SURFACE = C("surface")
+_ACCENT  = C("accent")
 
 _CURRENCIES = ["RON", "EUR", "USD", "GBP", "CHF", "PLN", "CZK", "HUF",
                "SEK", "NOK", "DKK", "CAD", "JPY", "RUB"]
 
 _INP = (
     "QLineEdit,QComboBox{"
-    "background:#fefefe;border:1px solid #e3e5ec;border-radius:8px;"
-    "padding:6px 9px;font-size:13px;color:#2e3552;}"
-    "QLineEdit:focus,QComboBox:focus{border-color:#2f8f6b;}"
+    f"background:{C('surface')};border:1px solid {C('line')};border-radius:8px;"
+    f"padding:6px 9px;font-size:13px;color:{C('ink')};}}"
+    f"QLineEdit:focus,QComboBox:focus{{border-color:{C('accent')};}}"
     "QComboBox::drop-down{border:none;}"
-    "QComboBox QAbstractItemView{background:#fefefe;color:#2e3552;"
-    "border:1px solid #e3e5ec;selection-background-color:rgba(47,143,107,0.12);"
-    "selection-color:#1a6b4f;}"
+    f"QComboBox QAbstractItemView{{background:{C('surface')};color:{C('ink')};"
+    f"border:1px solid {C('line')};selection-background-color:{C('sel')};"
+    f"selection-color:{C('accent_ink')};}}"
 )
 
 # editable fields: (data_key, i18n_label_key, kind)
@@ -113,7 +114,7 @@ class DetailDrawer(QFrame):
         close_btn.setStyleSheet(
             f"QPushButton {{ background: {_SURFACE}; color: {_MUTED};"
             f" border: 1px solid {_LINE}; border-radius: 7px; font-size: 12px; }}"
-            "QPushButton:hover { background: #eeeff3; color: #2e3552; }"
+            f"QPushButton:hover {{ background: {C('surface3')}; color: {C('ink')}; }}"
         )
         close_btn.clicked.connect(self.closed)
         top.addWidget(self._file_lbl)
@@ -169,7 +170,7 @@ class DetailDrawer(QFrame):
         self._save_btn.setStyleSheet(
             f"QPushButton {{ background: {_ACCENT}; color: white; border: none;"
             " border-radius: 8px; font-size: 13px; font-weight: 700; }}"
-            "QPushButton:hover { background: #1e7558; }"
+            f"QPushButton:hover {{ background: {C('accent_press')}; }}"
         )
         self._save_btn.clicked.connect(self._on_save)
         fl.addWidget(self._save_btn)
@@ -270,7 +271,7 @@ class DetailDrawer(QFrame):
         if key in _REQUIRED and empty:
             badge.setText(L().t("conf_low"))
             badge.setStyleSheet(
-                "background: #f9f0dd; color: #8a6d1a; font-size: 9px;"
+                f"background: {C('warn_soft')}; color: {C('warn_ink')}; font-size: 9px;"
                 " font-weight: 700; padding: 1px 6px; border-radius: 5px;"
             )
         else:
@@ -285,13 +286,13 @@ class DetailDrawer(QFrame):
                 w.deleteLater()
         flags = []
         if row.get("is_duplicate"):
-            flags.append((L().t("flag_duplicate"), "#faeae7", "#b3261e"))
+            flags.append((L().t("flag_duplicate"), C("err_soft"), C("err_ink")))
         if row.get("is_outlier"):
-            flags.append((L().t("flag_outlier"), "#f9f0dd", "#8a6d1a"))
+            flags.append((L().t("flag_outlier"), C("warn_soft"), C("warn_ink")))
         if row.get("is_near_due"):
-            flags.append((L().t("flag_near_due"), "#f9f0dd", "#8a6d1a"))
+            flags.append((L().t("flag_near_due"), C("warn_soft"), C("warn_ink")))
         if row.get("is_scanned"):
-            flags.append((L().t("flag_scanned"), "#eef0f4", "#5d6480"))
+            flags.append((L().t("flag_scanned"), C("surface3"), C("ink2")))
         for text, bg, fg in flags:
             chip = QLabel(text)
             chip.setStyleSheet(

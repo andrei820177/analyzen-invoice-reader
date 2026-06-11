@@ -28,7 +28,6 @@ a = Analysis(
         "numpy",
         "watchdog",
         "PyQt6",
-        "pyqtgraph",
         "openpyxl",
         "reportlab",
         "core.extractor",

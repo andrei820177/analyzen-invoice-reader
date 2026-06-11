@@ -2,19 +2,16 @@ from __future__ import annotations
 
 import threading
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List, Tuple
 
-import pyqtgraph as pg
-from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont
+from PyQt6.QtCore import Qt, QRectF, QTimer
+from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont, QFontMetrics
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel,
     QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
 )
 from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
-
-pg.setConfigOptions(antialias=True, background="#fefefe", foreground="#2e3552")
 
 _PRIMARY  = "#2f8f6b"
 _INK      = "#2e3552"
@@ -110,6 +107,162 @@ class PieChartWidget(QWidget):
         painter.end()
 
 
+def _fmt_compact(v: float) -> str:
+    if v >= 1_000_000:
+        return f"{v / 1e6:.1f}M"
+    if v >= 1_000:
+        return f"{v / 1e3:.1f}k"
+    return f"{v:.0f}"
+
+
+def _empty_message(painter: QPainter, rect, text: str) -> None:
+    painter.setPen(QColor("#939ab0"))
+    f = QFont()
+    f.setPointSize(10)
+    painter.setFont(f)
+    painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
+
+
+class BarChartWidget(QWidget):
+    """Display-only vertical bar chart (no pan/zoom/menu)."""
+
+    def __init__(self, color: str = _PRIMARY, parent=None):
+        super().__init__(parent)
+        self._data: List[Tuple[str, float]] = []
+        self._color = color
+        self.setMinimumHeight(220)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+    def set_data(self, pairs) -> None:
+        self._data = [(str(k), float(v)) for k, v in pairs if v is not None]
+        self.update()
+
+    def paintEvent(self, _event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+
+        lab_font = QFont(); lab_font.setPointSizeF(8.0)
+        val_font = QFont(); val_font.setPointSizeF(8.0); val_font.setBold(True)
+        fm = QFontMetrics(lab_font)
+
+        ml, mr, mt = 10, 10, 20
+        n = max(len(self._data), 1)
+        slot = (W - ml - mr) / n
+        # rotate x labels when the full date wouldn't fit horizontally
+        max_lab_w = max((fm.horizontalAdvance(k) for k, _ in self._data), default=0)
+        rotate = max_lab_w > slot - 4
+        mb = (int(max_lab_w * 0.72) + 16) if rotate else 26
+
+        pw, ph = W - ml - mr, H - mt - mb
+        if not self._data or pw < 30 or ph < 30:
+            _empty_message(p, self.rect(), L().t("no_invoices"))
+            p.end()
+            return
+
+        vmax = max(v for _, v in self._data) or 1.0
+        bar_w = min(slot * 0.62, 46)
+        axis_y = mt + ph
+
+        # subtle horizontal gridlines
+        p.setPen(QPen(QColor("#eef0f4")))
+        for gi in range(1, 4):
+            yy = mt + ph * gi / 4
+            p.drawLine(int(ml), int(yy), int(ml + pw), int(yy))
+
+        for i, (label, val) in enumerate(self._data):
+            bh = (val / vmax) * (ph * 0.80)
+            cx = ml + slot * i + slot / 2
+            y = axis_y - bh
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(self._color))
+            p.drawRoundedRect(QRectF(cx - bar_w / 2, y, bar_w, max(bh, 2)), 4, 4)
+
+            # value above the bar
+            p.setFont(val_font)
+            p.setPen(QColor(_INK))
+            p.drawText(QRectF(cx - slot / 2, y - 16, slot, 14),
+                       int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom),
+                       _fmt_compact(val))
+
+            # x-axis label: rotated 45° (full date) or centred when it fits
+            p.setFont(lab_font)
+            p.setPen(QColor("#6b7291"))
+            if rotate:
+                p.save()
+                p.translate(cx, axis_y + 6)
+                p.rotate(-45)
+                p.drawText(QRectF(-max_lab_w - 4, -fm.height() / 2, max_lab_w, fm.height()),
+                           int(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter),
+                           label)
+                p.restore()
+            else:
+                p.drawText(QRectF(cx - slot / 2, axis_y + 4, slot, 16),
+                           int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
+                           label)
+        p.end()
+
+
+class HBarChartWidget(QWidget):
+    """Display-only horizontal bar chart for ranked items (no interaction)."""
+
+    def __init__(self, color: str = "#3498db", parent=None):
+        super().__init__(parent)
+        self._data: List[Tuple[str, float]] = []
+        self._color = color
+        self.setMinimumHeight(200)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+    def set_data(self, pairs) -> None:
+        self._data = [(str(k), float(v)) for k, v in pairs if v is not None]
+        self.update()
+
+    def paintEvent(self, _event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        mt, mb = 8, 8
+        ph = H - mt - mb
+        if not self._data or ph < 20 or W < 120:
+            _empty_message(p, self.rect(), L().t("no_invoices"))
+            p.end()
+            return
+
+        label_w = min(150.0, W * 0.34)
+        val_w = 56.0
+        bar_area = W - label_w - val_w - 16
+        vmax = max(v for _, v in self._data) or 1.0
+        n = len(self._data)
+        row_h = ph / n
+
+        name_font = QFont(); name_font.setPointSizeF(8.5)
+        val_font = QFont(); val_font.setPointSizeF(8.5); val_font.setBold(True)
+        fm = QFontMetrics(name_font)
+
+        for i, (label, val) in enumerate(self._data):
+            y = mt + row_h * i
+            bh = min(row_h * 0.62, 20)
+            by = y + (row_h - bh) / 2
+
+            p.setFont(name_font)
+            p.setPen(QColor(_INK))
+            p.drawText(QRectF(0, y, label_w - 8, row_h),
+                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight),
+                       fm.elidedText(label, Qt.TextElideMode.ElideRight, int(label_w - 10)))
+
+            bw = max((val / vmax) * bar_area, 2)
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(self._color))
+            p.drawRoundedRect(QRectF(label_w, by, bw, bh), 4, 4)
+
+            p.setFont(val_font)
+            p.setPen(QColor("#6b7291"))
+            p.drawText(QRectF(label_w + bw + 6, y, val_w, row_h),
+                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                       _fmt_compact(val))
+        p.end()
+
+
 class ChartCard(QFrame):
     def __init__(self, title_key: str, parent=None):
         super().__init__(parent)
@@ -176,14 +329,7 @@ class DashboardPage(QWidget):
         charts_row.setSpacing(12)
 
         self._month_card = ChartCard("chart_by_month")
-        self._bar_plot = pg.PlotWidget()
-        self._bar_plot.setMinimumHeight(220)
-        self._bar_plot.setBackground(_SURFACE)
-        self._bar_plot.getAxis("left").setTextPen(pg.mkPen(color=_INK))
-        self._bar_plot.getAxis("bottom").setTextPen(pg.mkPen(color=_INK))
-        self._bar_plot.showGrid(y=True, alpha=0.3)
-        self._bar_plot.getPlotItem().hideAxis("top")
-        self._bar_plot.getPlotItem().hideAxis("right")
+        self._bar_plot = BarChartWidget(_PRIMARY)
         self._month_card.add_widget(self._bar_plot)
         charts_row.addWidget(self._month_card, 3)
 
@@ -195,14 +341,7 @@ class DashboardPage(QWidget):
         root.addLayout(charts_row)
 
         self._supplier_card = ChartCard("chart_top_suppliers")
-        self._supplier_plot = pg.PlotWidget()
-        self._supplier_plot.setFixedHeight(200)
-        self._supplier_plot.setBackground(_SURFACE)
-        self._supplier_plot.getAxis("left").setTextPen(pg.mkPen(color=_INK))
-        self._supplier_plot.getAxis("bottom").setTextPen(pg.mkPen(color=_INK))
-        self._supplier_plot.showGrid(x=True, alpha=0.3)
-        self._supplier_plot.getPlotItem().hideAxis("top")
-        self._supplier_plot.getPlotItem().hideAxis("right")
+        self._supplier_plot = HBarChartWidget("#3498db")
         self._supplier_card.add_widget(self._supplier_plot)
         root.addWidget(self._supplier_card)
 
@@ -282,39 +421,14 @@ class DashboardPage(QWidget):
         self._update_supplier_chart(summary.get("per_supplier", {}))
 
     def _update_monthly_chart(self, per_month: dict) -> None:
-        self._bar_plot.clear()
-        if not per_month:
-            return
-
         def _fmt(k: str) -> str:
             if k in ("N/A", "Unknown", ""):
                 return "N/A"
-            # "2024-03" → "24-03"
-            return k[2:] if len(k) == 7 else k
+            return k[2:] if len(k) == 7 else k   # "2024-03" -> "24-03"
 
         keys = sorted(per_month.keys())
-        values = [per_month[k] for k in keys]
-        bar = pg.BarGraphItem(
-            x=list(range(len(keys))), height=values, width=0.6,
-            brush=pg.mkBrush(_PRIMARY), pen=pg.mkPen(None),
-        )
-        self._bar_plot.addItem(bar)
-        self._bar_plot.getAxis("bottom").setTicks(
-            [[(i, _fmt(k)) for i, k in enumerate(keys)]]
-        )
+        self._bar_plot.set_data([(_fmt(k), per_month[k]) for k in keys])
 
     def _update_supplier_chart(self, per_supplier: dict) -> None:
-        self._supplier_plot.clear()
-        if not per_supplier:
-            return
         items = sorted(per_supplier.items(), key=lambda x: x[1], reverse=True)[:10]
-        labels = [it[0][:20] for it in items]
-        values = [it[1] for it in items]
-        bar = pg.BarGraphItem(
-            x0=0, x1=values, y=list(range(len(labels))), height=0.6,
-            brush=pg.mkBrush("#3498db"), pen=pg.mkPen(None),
-        )
-        self._supplier_plot.addItem(bar)
-        self._supplier_plot.getAxis("left").setTicks(
-            [[(i, lbl) for i, lbl in enumerate(labels)]]
-        )
+        self._supplier_plot.set_data([(it[0], it[1]) for it in items])

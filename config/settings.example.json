@@ -14,5 +14,6 @@
   "smtp_from": "",
   "smtp_to": "",
   "max_workers": 0,
-  "confidence_threshold": 0.6
+  "confidence_threshold": 0.6,
+  "show_log": false
 }

@@ -73,6 +73,7 @@ class SettingsDialog(QDialog):
         tabs.addTab(self._build_ocr_tab(), "OCR")
         tabs.addTab(self._build_email_tab(), "Email")
         tabs.addTab(self._build_advanced_tab(), "Avansat")
+        tabs.addTab(self._build_debug_tab(), "Debugging")
         root.addWidget(tabs)
 
         buttons = QDialogButtonBox(
@@ -268,6 +269,26 @@ class SettingsDialog(QDialog):
 
         return w
 
+    def _build_debug_tab(self) -> QWidget:
+        w = QWidget()
+        form = QFormLayout(w)
+        form.setContentsMargins(16, 16, 16, 16)
+        form.setSpacing(12)
+
+        self._show_log = QCheckBox("Afiseaza consola de log la procesare")
+        self._show_log.setChecked(bool(self._settings.get("show_log", False)))
+        form.addRow("Log procesare:", self._show_log)
+
+        note = QLabel(
+            "Consola de log arata pasii de procesare a facturilor (uz debug).\n"
+            "Comutare rapida si din aplicatie: Ctrl+L."
+        )
+        note.setStyleSheet("color:#6b7291;font-size:11px;")
+        note.setWordWrap(True)
+        form.addRow("", note)
+
+        return w
+
     def _browse_watch_folder(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Selecteaza folder")
         if folder:
@@ -300,6 +321,7 @@ class SettingsDialog(QDialog):
             "smtp_to":                   to_list,
             "outlier_std_dev_multiplier": self._outlier_mult.value(),
             "confidence_threshold":      self._conf_threshold.value(),
+            "show_log":                  self._show_log.isChecked(),
         })
         _save(data)
         self.accept()

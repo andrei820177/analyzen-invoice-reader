@@ -358,18 +358,10 @@ class MainWindow(QMainWindow):
         self._btn_open_folder = self._make_header_btn("btn_open_folder", primary=False)
         self._btn_watch       = self._make_header_btn("btn_watch",       primary=False)
         self._btn_clear       = self._make_header_btn("btn_clear",       primary=False)
-        self._btn_log_toggle  = self._make_log_toggle_btn()
 
         for btn in (self._btn_open_files, self._btn_open_folder,
                     self._btn_watch, self._btn_clear):
             hl.addWidget(btn)
-
-        # Separator
-        vline = QFrame()
-        vline.setFrameShape(QFrame.Shape.VLine)
-        vline.setStyleSheet("background: #e3e5ec; max-width: 1px;")
-        hl.addWidget(vline)
-        hl.addWidget(self._btn_log_toggle)
 
         content_layout.addWidget(self._header)
 
@@ -396,9 +388,9 @@ class MainWindow(QMainWindow):
         self._stack.addWidget(self._export_page)  # 3
         content_layout.addWidget(self._stack, 1)
 
-        # Log panel — hidden by default
+        # Log panel — visibility controlled from Settings > Debugging (or Ctrl+L)
         self._log = LogPanel()
-        self._log.setVisible(False)
+        self._log.setVisible(_load_settings().get("show_log", False))
         content_layout.addWidget(self._log)
 
         main_layout.addWidget(content_frame, 1)
@@ -426,22 +418,6 @@ class MainWindow(QMainWindow):
                 "QPushButton:hover { background: #eeeff3; }"
                 "QPushButton:disabled { color: #939ab0; }"
             )
-        return btn
-
-    def _make_log_toggle_btn(self) -> QPushButton:
-        btn = QPushButton("Log")
-        btn.setFixedSize(40, 32)
-        btn.setCheckable(True)
-        btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn.setToolTip("Toggle log panel  (Ctrl+L)")
-        btn.setStyleSheet(
-            "QPushButton { background: #fefefe; color: #6b7291; border-radius: 8px;"
-            " border: 1px solid #e3e5ec; font-size: 11px; font-weight: 600; }"
-            "QPushButton:hover { background: #eeeff3; }"
-            "QPushButton:checked { background: #2f8f6b; color: white; border-color: #2f8f6b; }"
-            "QPushButton:checked:hover { background: #1e7558; }"
-        )
-        btn.clicked.connect(self._toggle_log)
         return btn
 
     # ------------------------------------------------------------------
@@ -518,9 +494,7 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _toggle_log(self) -> None:
-        visible = not self._log.isVisible()
-        self._log.setVisible(visible)
-        self._btn_log_toggle.setChecked(visible)
+        self._log.setVisible(not self._log.isVisible())
 
     # ------------------------------------------------------------------
     # File processing
@@ -698,6 +672,7 @@ class MainWindow(QMainWindow):
             )
             self._dashboard.set_base_currency(settings.get("base_currency", "RON"))
             self._dashboard.refresh_fx()
+            self._log.setVisible(settings.get("show_log", False))
             if len(self._idf) > 0:
                 self._refresh_views()
 

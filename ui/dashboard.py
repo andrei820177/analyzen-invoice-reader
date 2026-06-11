@@ -5,11 +5,11 @@ import threading
 from datetime import datetime
 from typing import Dict, List, Tuple
 
-from PyQt6.QtCore import Qt, QRectF, QTimer
+from PyQt6.QtCore import Qt, QPointF, QRectF, QTimer
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont, QFontMetrics
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel,
-    QScrollArea, QSizePolicy, QToolTip, QVBoxLayout, QWidget,
+    QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
 )
 from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
@@ -71,6 +71,7 @@ class PieChartWidget(QWidget):
         super().__init__(parent)
         self._data: List[Tuple[str, float]] = []   # (category, value) desc
         self._hover = -1
+        self._hover_pos = None
         self._geom = None        # (cx, cy, R, r, [(start_deg, end_deg), ...])
         self.setMouseTracking(True)
         self.setMinimumSize(200, 200)
@@ -106,17 +107,10 @@ class PieChartWidget(QWidget):
 
     def mouseMoveEvent(self, event):
         idx = self._slice_at(event.position())
+        self._hover_pos = event.position()
         if idx != self._hover:
             self._hover = idx
-            self.update()
-        if idx >= 0:
-            cat, val = self._data[idx]
-            total = sum(v for _, v in self._data) or 1.0
-            QToolTip.showText(
-                event.globalPosition().toPoint(),
-                f"{cat}: {val:,.0f}  ({val / total * 100:.1f}%)", self)
-        else:
-            QToolTip.hideText()
+        self.update()
         super().mouseMoveEvent(event)
 
     def leaveEvent(self, event):
@@ -176,36 +170,40 @@ class PieChartWidget(QWidget):
         # ---- legend (right) ----------------------------------------------
         lx = dx + d + 18
         lw = W - lx - 10
-        if lw < 90:                        # too narrow for a legend
-            p.end()
-            return
-        rows = self._data
-        rh = min(24.0, (H - 16) / len(rows))
-        ly = (H - rh * len(rows)) / 2
-        name_font = QFont(); name_font.setPointSizeF(8.8)
-        pct_font = QFont(); pct_font.setPointSizeF(8.8); pct_font.setBold(True)
-        fm = QFontMetrics(name_font)
+        if lw >= 90:
+            rows = self._data
+            rh = min(24.0, (H - 16) / len(rows))
+            ly = (H - rh * len(rows)) / 2
+            name_font = QFont(); name_font.setPointSizeF(8.8)
+            pct_font = QFont(); pct_font.setPointSizeF(8.8); pct_font.setBold(True)
+            fm = QFontMetrics(name_font)
 
-        for i, (cat, val) in enumerate(rows):
-            ry = ly + i * rh
-            if i == self._hover:           # highlight the hovered row
+            for i, (cat, val) in enumerate(rows):
+                ry = ly + i * rh
+                if i == self._hover:           # highlight the hovered row
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.setBrush(QColor("#f0f1f5"))
+                    p.drawRoundedRect(QRectF(lx - 4, ry + 1, lw + 4, rh - 2), 5, 5)
                 p.setPen(Qt.PenStyle.NoPen)
-                p.setBrush(QColor("#f0f1f5"))
-                p.drawRoundedRect(QRectF(lx - 4, ry + 1, lw + 4, rh - 2), 5, 5)
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)]))
-            p.drawRoundedRect(QRectF(lx, ry + rh / 2 - 5, 10, 10), 3, 3)
+                p.setBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)]))
+                p.drawRoundedRect(QRectF(lx, ry + rh / 2 - 5, 10, 10), 3, 3)
 
-            name_w = lw - 46
-            p.setFont(name_font); p.setPen(QColor(_INK))
-            p.drawText(QRectF(lx + 17, ry, name_w, rh),
-                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
-                       fm.elidedText(cat, Qt.TextElideMode.ElideRight, int(name_w)))
+                name_w = lw - 46
+                p.setFont(name_font); p.setPen(QColor(_INK))
+                p.drawText(QRectF(lx + 17, ry, name_w, rh),
+                           int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                           fm.elidedText(cat, Qt.TextElideMode.ElideRight, int(name_w)))
 
-            p.setFont(pct_font); p.setPen(QColor("#6b7291"))
-            p.drawText(QRectF(lx + lw - 40, ry, 40, rh),
-                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight),
-                       f"{val / total * 100:.0f}%")
+                p.setFont(pct_font); p.setPen(QColor("#6b7291"))
+                p.drawText(QRectF(lx + lw - 40, ry, 40, rh),
+                           int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight),
+                           f"{val / total * 100:.0f}%")
+
+        if self._hover >= 0 and self._hover_pos is not None:
+            cat, val = self._data[self._hover]
+            _draw_tooltip(p, self.rect(), self._hover_pos, cat,
+                          f"{val:,.0f}  ·  {val / total * 100:.1f}%",
+                          dot=_CATEGORY_COLORS[self._hover % len(_CATEGORY_COLORS)])
         p.end()
 
 
@@ -225,6 +223,49 @@ def _empty_message(painter: QPainter, rect, text: str) -> None:
     painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, text)
 
 
+def _draw_tooltip(p: QPainter, bounds, pos: QPointF,
+                  title: str, subtitle: str, dot: str = None) -> None:
+    """Custom hover tooltip: rounded card with border, shadow, colour dot."""
+    tf = QFont(); tf.setPointSizeF(8.8); tf.setBold(True)
+    sf = QFont(); sf.setPointSizeF(8.2)
+    fmt, fms = QFontMetrics(tf), QFontMetrics(sf)
+
+    pad = 9
+    dot_w = 14 if dot else 0
+    tw = max(fmt.horizontalAdvance(title) + dot_w, fms.horizontalAdvance(subtitle))
+    w = tw + pad * 2
+    h = pad * 2 + fmt.height() + (fms.height() + 2 if subtitle else 0)
+
+    x, y = pos.x() + 14, pos.y() + 16
+    if x + w > bounds.width() - 4:
+        x = pos.x() - w - 14
+    if y + h > bounds.height() - 4:
+        y = pos.y() - h - 14
+    x = max(4, min(x, bounds.width() - w - 4))
+    y = max(4, min(y, bounds.height() - h - 4))
+
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(QColor(16, 24, 40, 32))                 # soft shadow
+    p.drawRoundedRect(QRectF(x + 1, y + 3, w, h), 8, 8)
+    p.setBrush(QColor("#ffffff"))
+    p.setPen(QPen(QColor("#d6d9e3"), 1))               # contour
+    p.drawRoundedRect(QRectF(x, y, w, h), 8, 8)
+
+    tx = x + pad
+    if dot:
+        p.setPen(Qt.PenStyle.NoPen)
+        p.setBrush(QColor(dot))
+        p.drawRoundedRect(QRectF(tx, y + pad + 3, 9, 9), 2.5, 2.5)
+        tx += dot_w
+    p.setFont(tf); p.setPen(QColor(_INK))
+    p.drawText(QRectF(tx, y + pad - 1, w, fmt.height() + 2),
+               int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), title)
+    if subtitle:
+        p.setFont(sf); p.setPen(QColor("#6b7291"))
+        p.drawText(QRectF(x + pad, y + pad + fmt.height(), w, fms.height() + 2),
+                   int(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter), subtitle)
+
+
 class BarChartWidget(QWidget):
     """Display-only vertical bar chart (no pan/zoom/menu)."""
 
@@ -233,6 +274,7 @@ class BarChartWidget(QWidget):
         self._data: List[Tuple[str, float]] = []
         self._color = color
         self._hover = -1
+        self._hover_pos = None
         self._cols = None      # (ml, slot, n) for hit-testing
         self.setMouseTracking(True)
         self.setMinimumHeight(220)
@@ -250,15 +292,9 @@ class BarChartWidget(QWidget):
             i = int((event.position().x() - ml) // slot)
             if 0 <= i < n:
                 idx = i
-        if idx != self._hover:
-            self._hover = idx
-            self.update()
-        if idx >= 0:
-            label, val = self._data[idx]
-            QToolTip.showText(event.globalPosition().toPoint(),
-                              f"{label}: {val:,.0f}", self)
-        else:
-            QToolTip.hideText()
+        self._hover_pos = event.position()
+        self._hover = idx
+        self.update()
         super().mouseMoveEvent(event)
 
     def leaveEvent(self, event):
@@ -333,6 +369,11 @@ class BarChartWidget(QWidget):
                 p.drawText(QRectF(cx - slot / 2, axis_y + 4, slot, 16),
                            int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
                            label)
+
+        if self._hover >= 0 and self._hover_pos is not None:
+            label, val = self._data[self._hover]
+            _draw_tooltip(p, self.rect(), self._hover_pos, label,
+                          f"{val:,.0f}", dot=self._color)
         p.end()
 
 
@@ -344,6 +385,7 @@ class HBarChartWidget(QWidget):
         self._data: List[Tuple[str, float]] = []
         self._color = color
         self._hover = -1
+        self._hover_pos = None
         self._rows = None      # (mt, row_h, n) for hit-testing
         self.setMouseTracking(True)
         self.setMinimumHeight(200)
@@ -361,15 +403,9 @@ class HBarChartWidget(QWidget):
             i = int((event.position().y() - mt) // row_h)
             if 0 <= i < n:
                 idx = i
-        if idx != self._hover:
-            self._hover = idx
-            self.update()
-        if idx >= 0:
-            label, val = self._data[idx]
-            QToolTip.showText(event.globalPosition().toPoint(),
-                              f"{label}: {val:,.0f}", self)
-        else:
-            QToolTip.hideText()
+        self._hover_pos = event.position()
+        self._hover = idx
+        self.update()
         super().mouseMoveEvent(event)
 
     def leaveEvent(self, event):
@@ -429,6 +465,11 @@ class HBarChartWidget(QWidget):
             p.drawText(QRectF(label_w + bw + 6, y, val_w, row_h),
                        int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
                        _fmt_compact(val))
+
+        if self._hover >= 0 and self._hover_pos is not None:
+            label, val = self._data[self._hover]
+            _draw_tooltip(p, self.rect(), self._hover_pos, label,
+                          f"{val:,.0f}", dot=self._color)
         p.end()
 
 

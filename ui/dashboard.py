@@ -341,14 +341,17 @@ class BarChartWidget(QWidget):
 
         base = QColor(self._color)
         hover_col = base.darker(118)
+        min_hit = 16          # easy-to-hover height for tiny values
         for i, (label, val) in enumerate(self._data):
             bh = (val / vmax) * (ph * 0.80)
             cx = ml + slot * i + slot / 2
-            y = axis_y - bh
-            bars.append((cx - bar_w / 2, cx + bar_w / 2, y))
+            vis_h = max(bh, 4)            # always visible
+            y = axis_y - vis_h
+            hit_top = axis_y - max(bh, min_hit)   # enlarged hover area
+            bars.append((cx - bar_w / 2, cx + bar_w / 2, hit_top))
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(hover_col if i == self._hover else base)
-            p.drawRoundedRect(QRectF(cx - bar_w / 2, y, bar_w, max(bh, 2)), 4, 4)
+            p.drawRoundedRect(QRectF(cx - bar_w / 2, y, bar_w, vis_h), 4, 4)
 
             # value above the bar
             p.setFont(val_font)
@@ -459,9 +462,9 @@ class HBarChartWidget(QWidget):
                        int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight),
                        fm.elidedText(label, Qt.TextElideMode.ElideRight, int(label_w - 10)))
 
-            bw = max((val / vmax) * bar_area, 2)
-            # hit area: the bar's width, full row height (easier to hover)
-            bars.append((label_w, label_w + bw, y, y + row_h))
+            bw = max((val / vmax) * bar_area, 4)        # always visible
+            # hit area: bar width (min 16px) across the full row height
+            bars.append((label_w, label_w + max(bw, 16), y, y + row_h))
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(hover_col if i == self._hover else base)
             p.drawRoundedRect(QRectF(label_w, by, bw, bh), 4, 4)

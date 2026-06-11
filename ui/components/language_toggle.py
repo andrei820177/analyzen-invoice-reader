@@ -1,3 +1,5 @@
+import time
+
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget,
@@ -64,6 +66,7 @@ class _LangPopup(QFrame):
     """
 
     chosen = pyqtSignal(str)
+    closed = pyqtSignal()
 
     def __init__(self, langs, current: str, min_width: int, parent=None):
         super().__init__(parent, Qt.WindowType.Popup)
@@ -89,6 +92,10 @@ class _LangPopup(QFrame):
         path.addRoundedRect(QRectF(self.rect()), _RADIUS, _RADIUS)
         self.setMask(QRegion(path.toFillPolygon().toPolygon()))
 
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        self.closed.emit()
+
     def _pick(self, code: str) -> None:
         self.chosen.emit(code)
         self.close()
@@ -102,6 +109,7 @@ class LanguageToggle(QWidget):
         self._langs = get_languages()
         self._code = current if current in dict(self._langs) else "ro"
         self._popup = None
+        self._popup_closed_at = 0.0
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -146,8 +154,14 @@ class LanguageToggle(QWidget):
         return dict(self._langs).get(code, code)
 
     def _open_popup(self) -> None:
+        # If the field click is the same one that just dismissed an open popup
+        # (Qt.Popup closes on press, the field then gets the release), treat it
+        # as a toggle and leave the popup closed instead of reopening it.
+        if time.monotonic() - self._popup_closed_at < 0.25:
+            return
         popup = _LangPopup(self._langs, self._code, self._field.width(), self)
         popup.chosen.connect(lambda code: self._select(code, emit=True))
+        popup.closed.connect(self._on_popup_closed)
         popup.adjustSize()
         ph = popup.sizeHint().height()
 
@@ -163,6 +177,10 @@ class LanguageToggle(QWidget):
         popup.move(x, y)
         self._popup = popup
         popup.show()
+
+    def _on_popup_closed(self) -> None:
+        self._popup_closed_at = time.monotonic()
+        self._popup = None
 
     def _select(self, lang: str, emit: bool = True) -> None:
         if lang not in dict(self._langs):

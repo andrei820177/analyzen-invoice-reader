@@ -81,5 +81,6 @@
   "status_valid": "Valid",
   "status_warning": "Atentie",
   "status_error": "Eroare",
-  "col_status": "Status"
+  "col_status": "Status",
+  "categories": "categorii"
 }

@@ -69,5 +69,6 @@
   "status_valid": "Gültig",
   "status_warning": "Warnung",
   "status_error": "Fehler",
-  "col_status": "Status"
+  "col_status": "Status",
+  "categories": "Kategorien"
 }

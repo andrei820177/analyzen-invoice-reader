@@ -81,5 +81,6 @@
   "status_valid": "Valid",
   "status_warning": "Warning",
   "status_error": "Error",
-  "col_status": "Status"
+  "col_status": "Status",
+  "categories": "categories"
 }

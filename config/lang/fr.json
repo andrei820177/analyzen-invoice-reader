@@ -69,5 +69,6 @@
   "status_valid": "Valide",
   "status_warning": "Attention",
   "status_error": "Erreur",
-  "col_status": "Statut"
+  "col_status": "Statut",
+  "categories": "catégories"
 }

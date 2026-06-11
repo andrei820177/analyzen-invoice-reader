@@ -69,5 +69,6 @@
   "status_valid": "Корректно",
   "status_warning": "Внимание",
   "status_error": "Ошибка",
-  "col_status": "Статус"
+  "col_status": "Статус",
+  "categories": "категории"
 }

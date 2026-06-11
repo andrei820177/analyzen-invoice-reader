@@ -69,5 +69,6 @@
   "status_valid": "Geldig",
   "status_warning": "Let op",
   "status_error": "Fout",
-  "col_status": "Status"
+  "col_status": "Status",
+  "categories": "categorieën"
 }

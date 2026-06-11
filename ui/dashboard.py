@@ -64,47 +64,94 @@ class KpiCard(QFrame):
 
 
 class PieChartWidget(QWidget):
+    """Donut + legend showing each category's name, colour and share."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._data: Dict[str, float] = {}
+        self._data: List[Tuple[str, float]] = []   # (category, value) desc
         self.setMinimumSize(200, 200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def set_data(self, data: Dict[str, float]) -> None:
-        self._data = {k: v for k, v in data.items() if v > 0}
+        items = [(str(k), float(v)) for k, v in data.items() if v and v > 0]
+        items.sort(key=lambda kv: kv[1], reverse=True)
+        # keep the palette readable: fold the long tail into "..."
+        cap = len(_CATEGORY_COLORS)
+        if len(items) > cap:
+            tail = sum(v for _, v in items[cap - 1:])
+            items = items[:cap - 1] + [("…", tail)]
+        self._data = items
         self.update()
 
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        w, h = self.width(), self.height()
-        diameter = min(w, h) - 60
-        if diameter < 40:
+    def paintEvent(self, _event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing)
+        W, H = self.width(), self.height()
+        if not self._data:
+            _empty_message(p, self.rect(), L().t("no_invoices"))
+            p.end()
             return
-        x = (w - diameter) // 2
-        y = (h - diameter) // 2
-        total = sum(self._data.values()) or 1.0
-        start_angle = 0
-        for i, (label, value) in enumerate(self._data.items()):
-            span = int(value / total * 5760)
-            painter.setBrush(QBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)])))
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawPie(x, y, diameter, diameter, start_angle, span)
-            start_angle += span
-        hole_d = int(diameter * 0.55)
-        hole_x = (w - hole_d) // 2
-        hole_y = (h - hole_d) // 2
-        painter.setBrush(QBrush(QColor(_SURFACE)))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawEllipse(hole_x, hole_y, hole_d, hole_d)
-        painter.setPen(QPen(QColor(_INK)))
-        font = QFont()
-        font.setPointSize(9)
-        font.setBold(True)
-        painter.setFont(font)
-        painter.drawText(0, 0, w, h, Qt.AlignmentFlag.AlignCenter,
-                         f"{len(self._data)}\n{L().t('nav_invoices').lower()}")
-        painter.end()
+
+        total = sum(v for _, v in self._data) or 1.0
+
+        # ---- donut (left) -------------------------------------------------
+        d = max(80, min(H - 24, int(W * 0.46)))
+        dx, dy = 12, (H - d) // 2
+        ang = 90 * 16                      # start at the top
+        for i, (_cat, val) in enumerate(self._data):
+            span = -int(round(val / total * 5760))   # clockwise
+            p.setBrush(QBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)])))
+            p.setPen(QPen(QColor(_SURFACE), 2))       # thin gap between slices
+            p.drawPie(dx, dy, d, d, ang, span)
+            ang += span
+
+        hole_d = int(d * 0.58)
+        hx, hy = dx + (d - hole_d) // 2, dy + (d - hole_d) // 2
+        p.setBrush(QBrush(QColor(_SURFACE)))
+        p.setPen(Qt.PenStyle.NoPen)
+        p.drawEllipse(hx, hy, hole_d, hole_d)
+
+        cnt_font = QFont(); cnt_font.setPointSize(15); cnt_font.setBold(True)
+        p.setFont(cnt_font); p.setPen(QColor(_INK))
+        p.drawText(QRectF(dx, dy + d / 2 - 18, d, 22),
+                   int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom),
+                   str(len(self._data)))
+        sub_font = QFont(); sub_font.setPointSize(8)
+        p.setFont(sub_font); p.setPen(QColor("#939ab0"))
+        p.drawText(QRectF(dx, dy + d / 2 + 2, d, 16),
+                   int(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop),
+                   L().t("categories"))
+
+        # ---- legend (right) ----------------------------------------------
+        lx = dx + d + 18
+        lw = W - lx - 10
+        if lw < 90:                        # too narrow for a legend
+            p.end()
+            return
+        rows = self._data
+        rh = min(24.0, (H - 16) / len(rows))
+        ly = (H - rh * len(rows)) / 2
+        name_font = QFont(); name_font.setPointSizeF(8.8)
+        pct_font = QFont(); pct_font.setPointSizeF(8.8); pct_font.setBold(True)
+        fm = QFontMetrics(name_font)
+
+        for i, (cat, val) in enumerate(rows):
+            ry = ly + i * rh
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)]))
+            p.drawRoundedRect(QRectF(lx, ry + rh / 2 - 5, 10, 10), 3, 3)
+
+            name_w = lw - 46
+            p.setFont(name_font); p.setPen(QColor(_INK))
+            p.drawText(QRectF(lx + 17, ry, name_w, rh),
+                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft),
+                       fm.elidedText(cat, Qt.TextElideMode.ElideRight, int(name_w)))
+
+            p.setFont(pct_font); p.setPen(QColor("#6b7291"))
+            p.drawText(QRectF(lx + lw - 40, ry, 40, rh),
+                       int(Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight),
+                       f"{val / total * 100:.0f}%")
+        p.end()
 
 
 def _fmt_compact(v: float) -> str:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import threading
 from datetime import datetime
 from typing import Dict, List, Tuple
@@ -8,7 +9,7 @@ from PyQt6.QtCore import Qt, QRectF, QTimer
 from PyQt6.QtGui import QColor, QPainter, QPen, QBrush, QFont, QFontMetrics
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel,
-    QScrollArea, QSizePolicy, QVBoxLayout, QWidget,
+    QScrollArea, QSizePolicy, QToolTip, QVBoxLayout, QWidget,
 )
 from core.currency import is_rates_fresh, key_rates, refresh_rates, source_name
 from ui.lang import L
@@ -69,6 +70,9 @@ class PieChartWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._data: List[Tuple[str, float]] = []   # (category, value) desc
+        self._hover = -1
+        self._geom = None        # (cx, cy, R, r, [(start_deg, end_deg), ...])
+        self.setMouseTracking(True)
         self.setMinimumSize(200, 200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -81,7 +85,45 @@ class PieChartWidget(QWidget):
             tail = sum(v for _, v in items[cap - 1:])
             items = items[:cap - 1] + [("…", tail)]
         self._data = items
+        self._hover = -1
         self.update()
+
+    def _slice_at(self, pos) -> int:
+        """Index of the donut slice under pos, or -1."""
+        if not self._geom:
+            return -1
+        cx, cy, R, r, ranges = self._geom
+        dx, dy = pos.x() - cx, pos.y() - cy
+        dist = math.hypot(dx, dy)
+        if not (r <= dist <= R):
+            return -1
+        # angle measured clockwise from the top (12 o'clock)
+        t = (90 - math.degrees(math.atan2(-dy, dx))) % 360
+        for i, (a0, a1) in enumerate(ranges):
+            if a0 <= t < a1:
+                return i
+        return -1
+
+    def mouseMoveEvent(self, event):
+        idx = self._slice_at(event.position())
+        if idx != self._hover:
+            self._hover = idx
+            self.update()
+        if idx >= 0:
+            cat, val = self._data[idx]
+            total = sum(v for _, v in self._data) or 1.0
+            QToolTip.showText(
+                event.globalPosition().toPoint(),
+                f"{cat}: {val:,.0f}  ({val / total * 100:.1f}%)", self)
+        else:
+            QToolTip.hideText()
+        super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event):
+        if self._hover != -1:
+            self._hover = -1
+            self.update()
+        super().leaveEvent(event)
 
     def paintEvent(self, _event):
         p = QPainter(self)
@@ -97,13 +139,22 @@ class PieChartWidget(QWidget):
         # ---- donut (left) -------------------------------------------------
         d = max(80, min(H - 24, int(W * 0.46)))
         dx, dy = 12, (H - d) // 2
+        cx, cy, R = dx + d / 2, dy + d / 2, d / 2
         ang = 90 * 16                      # start at the top
+        ranges = []                        # clockwise-from-top span per slice
+        t0 = 0.0
         for i, (_cat, val) in enumerate(self._data):
-            span = -int(round(val / total * 5760))   # clockwise
+            frac = val / total
+            span = -int(round(frac * 5760))   # clockwise
+            pop = 5 if i == self._hover else 0   # lift the hovered slice outward
             p.setBrush(QBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)])))
             p.setPen(QPen(QColor(_SURFACE), 2))       # thin gap between slices
-            p.drawPie(dx, dy, d, d, ang, span)
+            p.drawPie(int(dx - pop), int(dy - pop), int(d + 2 * pop), int(d + 2 * pop),
+                      ang, span)
             ang += span
+            ranges.append((t0, t0 + frac * 360))
+            t0 += frac * 360
+        self._geom = (cx, cy, R + 5, d * 0.58 / 2, ranges)
 
         hole_d = int(d * 0.58)
         hx, hy = dx + (d - hole_d) // 2, dy + (d - hole_d) // 2
@@ -137,6 +188,10 @@ class PieChartWidget(QWidget):
 
         for i, (cat, val) in enumerate(rows):
             ry = ly + i * rh
+            if i == self._hover:           # highlight the hovered row
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QColor("#f0f1f5"))
+                p.drawRoundedRect(QRectF(lx - 4, ry + 1, lw + 4, rh - 2), 5, 5)
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(_CATEGORY_COLORS[i % len(_CATEGORY_COLORS)]))
             p.drawRoundedRect(QRectF(lx, ry + rh / 2 - 5, 10, 10), 3, 3)
@@ -177,12 +232,40 @@ class BarChartWidget(QWidget):
         super().__init__(parent)
         self._data: List[Tuple[str, float]] = []
         self._color = color
+        self._hover = -1
+        self._cols = None      # (ml, slot, n) for hit-testing
+        self.setMouseTracking(True)
         self.setMinimumHeight(220)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def set_data(self, pairs) -> None:
         self._data = [(str(k), float(v)) for k, v in pairs if v is not None]
+        self._hover = -1
         self.update()
+
+    def mouseMoveEvent(self, event):
+        idx = -1
+        if self._cols and self._data:
+            ml, slot, n = self._cols
+            i = int((event.position().x() - ml) // slot)
+            if 0 <= i < n:
+                idx = i
+        if idx != self._hover:
+            self._hover = idx
+            self.update()
+        if idx >= 0:
+            label, val = self._data[idx]
+            QToolTip.showText(event.globalPosition().toPoint(),
+                              f"{label}: {val:,.0f}", self)
+        else:
+            QToolTip.hideText()
+        super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event):
+        if self._hover != -1:
+            self._hover = -1
+            self.update()
+        super().leaveEvent(event)
 
     def paintEvent(self, _event):
         p = QPainter(self)
@@ -210,6 +293,7 @@ class BarChartWidget(QWidget):
         vmax = max(v for _, v in self._data) or 1.0
         bar_w = min(slot * 0.62, 46)
         axis_y = mt + ph
+        self._cols = (ml, slot, n)
 
         # subtle horizontal gridlines
         p.setPen(QPen(QColor("#eef0f4")))
@@ -217,12 +301,14 @@ class BarChartWidget(QWidget):
             yy = mt + ph * gi / 4
             p.drawLine(int(ml), int(yy), int(ml + pw), int(yy))
 
+        base = QColor(self._color)
+        hover_col = base.darker(118)
         for i, (label, val) in enumerate(self._data):
             bh = (val / vmax) * (ph * 0.80)
             cx = ml + slot * i + slot / 2
             y = axis_y - bh
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(self._color))
+            p.setBrush(hover_col if i == self._hover else base)
             p.drawRoundedRect(QRectF(cx - bar_w / 2, y, bar_w, max(bh, 2)), 4, 4)
 
             # value above the bar
@@ -257,12 +343,40 @@ class HBarChartWidget(QWidget):
         super().__init__(parent)
         self._data: List[Tuple[str, float]] = []
         self._color = color
+        self._hover = -1
+        self._rows = None      # (mt, row_h, n) for hit-testing
+        self.setMouseTracking(True)
         self.setMinimumHeight(200)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def set_data(self, pairs) -> None:
         self._data = [(str(k), float(v)) for k, v in pairs if v is not None]
+        self._hover = -1
         self.update()
+
+    def mouseMoveEvent(self, event):
+        idx = -1
+        if self._rows and self._data:
+            mt, row_h, n = self._rows
+            i = int((event.position().y() - mt) // row_h)
+            if 0 <= i < n:
+                idx = i
+        if idx != self._hover:
+            self._hover = idx
+            self.update()
+        if idx >= 0:
+            label, val = self._data[idx]
+            QToolTip.showText(event.globalPosition().toPoint(),
+                              f"{label}: {val:,.0f}", self)
+        else:
+            QToolTip.hideText()
+        super().mouseMoveEvent(event)
+
+    def leaveEvent(self, event):
+        if self._hover != -1:
+            self._hover = -1
+            self.update()
+        super().leaveEvent(event)
 
     def paintEvent(self, _event):
         p = QPainter(self)
@@ -281,15 +395,23 @@ class HBarChartWidget(QWidget):
         vmax = max(v for _, v in self._data) or 1.0
         n = len(self._data)
         row_h = ph / n
+        self._rows = (mt, row_h, n)
 
         name_font = QFont(); name_font.setPointSizeF(8.5)
         val_font = QFont(); val_font.setPointSizeF(8.5); val_font.setBold(True)
         fm = QFontMetrics(name_font)
+        base = QColor(self._color)
+        hover_col = base.darker(118)
 
         for i, (label, val) in enumerate(self._data):
             y = mt + row_h * i
             bh = min(row_h * 0.62, 20)
             by = y + (row_h - bh) / 2
+
+            if i == self._hover:
+                p.setPen(Qt.PenStyle.NoPen)
+                p.setBrush(QColor("#f6f7f9"))
+                p.drawRoundedRect(QRectF(2, y + 1, W - 4, row_h - 2), 5, 5)
 
             p.setFont(name_font)
             p.setPen(QColor(_INK))
@@ -299,7 +421,7 @@ class HBarChartWidget(QWidget):
 
             bw = max((val / vmax) * bar_area, 2)
             p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(QColor(self._color))
+            p.setBrush(hover_col if i == self._hover else base)
             p.drawRoundedRect(QRectF(label_w, by, bw, bh), 4, 4)
 
             p.setFont(val_font)

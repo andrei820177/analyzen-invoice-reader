@@ -178,6 +178,15 @@ _VAT_SPECS = [
                 re.IGNORECASE), 2),
 ]
 
+# Lines that state a VAT *registration id* (not an amount) — excluded from the
+# VAT-amount collector so the id digits aren't mistaken for the tax value.
+_VAT_ID_LINE = re.compile(
+    r'(?:VAT|TVA|IVA|MwSt|USt|BTW)\s*'
+    r'(?:no|nr|n[°º]|number|id|reg\w*|registration|-?\s?idnr)\b'
+    r'|P\.?\s*IVA|USt-?\s?IdNr|Partita\s*IVA|Tax\s*(?:ID|No)',
+    re.IGNORECASE,
+)
+
 
 # ---------------------------------------------------------------------------
 # Candidate collection and resolution
@@ -197,12 +206,14 @@ class _Candidate:
         return f"Cand({self.value}, w={self.weight}, ln={self.line_idx})"
 
 
-def _collect(lines: List[str], specs) -> List[_Candidate]:
+def _collect(lines: List[str], specs, skip_re: Optional[re.Pattern] = None) -> List[_Candidate]:
     """Scan lines for keyword matches; the amount is the rightmost value
     after the keyword on the same line, else the first value on the next line."""
     found: List[_Candidate] = []
     for i, line in enumerate(lines):
         if _line_excluded(line):
+            continue
+        if skip_re is not None and skip_re.search(line):
             continue
         for pat, weight in specs:
             m = pat.search(line)
@@ -235,7 +246,7 @@ def _resolve_amounts(lines: List[str]) -> Tuple[Optional[float], Optional[float]
     n = max(len(lines), 1)
     totals    = _dedupe_best(_collect(lines, _TOTAL_SPECS))
     subtotals = _dedupe_best(_collect(lines, _SUBTOTAL_SPECS))
-    vats      = _dedupe_best(_collect(lines, _VAT_SPECS))
+    vats      = _dedupe_best(_collect(lines, _VAT_SPECS, skip_re=_VAT_ID_LINE))
 
     # Drop VAT candidates that are actually the rate: small round integers
     # written without decimals ("TVA 19" — a real amount prints as "19,00")
@@ -765,6 +776,16 @@ def parse_fields(raw_text: str, tables: Optional[List] = None) -> Dict[str, Any]
         total = round(subtotal * (1 + vat_rate / 100), 2)
         if vat_amount is None:
             vat_amount = round(total - subtotal, 2)
+
+    # Reconcile the VAT rate with the actual amounts: the keyword default (19%)
+    # is only a guess. When subtotal and VAT are both known the true rate is
+    # vat/subtotal; when there is no VAT at all the rate is 0%.
+    if subtotal and vat_amount:
+        computed = round(vat_amount / subtotal * 100)
+        if 0 < computed <= 30:
+            vat_rate = float(computed)
+    elif not vat_amount and total:
+        vat_rate = 0.0
 
     # Final consistency flag
     if total and subtotal and vat_amount:

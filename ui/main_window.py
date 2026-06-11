@@ -635,28 +635,17 @@ class MainWindow(QMainWindow):
         if len(self._idf) > 0:
             self._on_page_changed("dashboard")
 
-    @staticmethod
-    def _compact_amount(v: float) -> str:
-        v = abs(float(v))
-        if v >= 1_000_000:
-            return f"{v / 1e6:.1f}M"
-        if v >= 10_000:
-            return f"{v / 1e3:.0f}k"
-        if v >= 1_000:
-            return f"{v / 1e3:.1f}k"
-        return f"{v:.0f}"
-
     def _update_sidebar(self) -> None:
         stats = self._idf.get_sidebar_stats()
         self._sidebar.set_counts({"invoices": stats["count"]})
-        # compact amounts so several currency chips fit the narrow sidebar
+        # full-precision amounts, one currency per row in the card
         chips = [
-            (code, self._compact_amount(amt))
+            (code, f"{amt:,.2f}")
             for code, amt in sorted(
                 stats["per_currency"].items(), key=lambda kv: kv[1], reverse=True
             )
         ]
-        total_text = f"{stats['total_base']:,.0f} {stats['base']}"
+        total_text = f"{stats['total_base']:,.2f} {stats['base']}"
         s = stats["status"]
         self._sidebar.set_summary(
             total_text, chips, (s["valid"], s["warning"], s["error"])

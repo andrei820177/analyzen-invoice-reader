@@ -145,36 +145,50 @@ class _SummaryCard(QFrame):
             "background:transparent;border:none;"
         )
 
-        self._chips_wrap = QWidget()
-        self._chips_wrap.setStyleSheet("background:transparent;")
-        self._chips = QHBoxLayout(self._chips_wrap)
-        self._chips.setContentsMargins(0, 6, 0, 0)
-        self._chips.setSpacing(4)
+        # per-currency breakdown, one row each (code left, full amount right)
+        self._rows_wrap = QWidget()
+        self._rows_wrap.setStyleSheet("background:transparent;")
+        self._rows = QVBoxLayout(self._rows_wrap)
+        self._rows.setContentsMargins(0, 8, 0, 2)
+        self._rows.setSpacing(3)
 
         self._bar = _HealthBar()
 
         v.addWidget(self._lab)
         v.addWidget(self._big)
-        v.addWidget(self._chips_wrap)
+        v.addWidget(self._rows_wrap)
         v.addWidget(self._bar)
 
     def set_data(self, total_text: str,
                  chips: List[Tuple[str, str]],
                  health: Tuple[int, int, int]) -> None:
         self._big.setText(total_text)
-        while self._chips.count():
-            item = self._chips.takeAt(0)
+        while self._rows.count():
+            item = self._rows.takeAt(0)
             w = item.widget()
             if w:
                 w.deleteLater()
-        for code, amount in chips[:3]:
-            chip = QLabel(f"{code} {amount}")
-            chip.setStyleSheet(
-                "background:#f0f1f5;color:#5d6480;font-size:10px;font-weight:700;"
-                "padding:2px 6px;border-radius:6px;border:none;"
+        for code, amount in chips[:4]:
+            row = QWidget()
+            row.setStyleSheet("background:transparent;")
+            h = QHBoxLayout(row)
+            h.setContentsMargins(0, 0, 0, 0)
+            h.setSpacing(6)
+            code_lbl = QLabel(code)
+            code_lbl.setStyleSheet(
+                "color:#939ab0;font-size:11px;font-weight:700;"
+                "letter-spacing:0.04em;background:transparent;border:none;"
             )
-            self._chips.addWidget(chip)
-        self._chips.addStretch()
+            amt_lbl = QLabel(amount)
+            amt_lbl.setStyleSheet(
+                "color:#2e3552;font-size:11.5px;font-weight:600;"
+                "background:transparent;border:none;"
+            )
+            amt_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            h.addWidget(code_lbl)
+            h.addStretch()
+            h.addWidget(amt_lbl)
+            self._rows.addWidget(row)
         self._bar.set_counts(*health)
 
     def retranslate(self) -> None:

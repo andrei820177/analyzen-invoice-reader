@@ -1,9 +1,8 @@
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtWidgets import (
-    QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QLabel,
-    QVBoxLayout, QWidget,
+    QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget,
 )
-from PyQt6.QtGui import QColor, QGuiApplication
+from PyQt6.QtGui import QGuiApplication, QPainterPath, QRegion
 
 from ui.components.language_data import get_languages
 from ui.theme import C
@@ -52,32 +51,30 @@ class _LangRow(_ClickFrame):
         h.addWidget(check)
 
 
+_RADIUS = 10
+
+
 class _LangPopup(QFrame):
-    """Frameless popup listing the languages; closes on outside click."""
+    """Frameless popup listing the languages; closes on outside click.
+
+    Uses a solid (non-translucent) background plus a rounded mask. A
+    translucent top-level window with a drop-shadow renders its "transparent"
+    areas as opaque white under the Windows compositor, which made the popup
+    appear light over a dark app -- a solid background avoids that entirely.
+    """
 
     chosen = pyqtSignal(str)
 
     def __init__(self, langs, current: str, min_width: int, parent=None):
         super().__init__(parent, Qt.WindowType.Popup)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        wrap = QVBoxLayout(self)
-        wrap.setContentsMargins(8, 8, 8, 8)   # room for the shadow
-
-        card = QFrame()
-        card.setObjectName("langcard")
-        card.setMinimumWidth(min_width)
-        card.setStyleSheet(
-            f"#langcard{{background:{C('surface')};border:1px solid {C('line')};border-radius:10px;}}"
+        self.setObjectName("langpop")
+        self.setMinimumWidth(min_width)
+        self.setStyleSheet(
+            f"#langpop{{background:{C('surface')};border:1px solid {C('line')};"
+            f"border-radius:{_RADIUS}px;}}"
         )
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(24)
-        shadow.setXOffset(0)
-        shadow.setYOffset(6)
-        shadow.setColor(QColor(0, 0, 0, 80 if not _is_light() else 45))
-        card.setGraphicsEffect(shadow)
 
-        v = QVBoxLayout(card)
+        v = QVBoxLayout(self)
         v.setContentsMargins(5, 5, 5, 5)
         v.setSpacing(2)
         for code, label in langs:
@@ -85,16 +82,16 @@ class _LangPopup(QFrame):
             row.clicked.connect(lambda c=code: self._pick(c))
             v.addWidget(row)
 
-        wrap.addWidget(card)
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        # round the window corners without translucency
+        path = QPainterPath()
+        path.addRoundedRect(QRectF(self.rect()), _RADIUS, _RADIUS)
+        self.setMask(QRegion(path.toFillPolygon().toPolygon()))
 
     def _pick(self, code: str) -> None:
         self.chosen.emit(code)
         self.close()
-
-
-def _is_light() -> bool:
-    from ui.theme import THEME
-    return not THEME.is_dark
 
 
 class LanguageToggle(QWidget):
@@ -149,7 +146,7 @@ class LanguageToggle(QWidget):
         return dict(self._langs).get(code, code)
 
     def _open_popup(self) -> None:
-        popup = _LangPopup(self._langs, self._code, self._field.width() + 16, self)
+        popup = _LangPopup(self._langs, self._code, self._field.width(), self)
         popup.chosen.connect(lambda code: self._select(code, emit=True))
         popup.adjustSize()
         ph = popup.sizeHint().height()
@@ -159,10 +156,10 @@ class LanguageToggle(QWidget):
         screen = QGuiApplication.screenAt(below) or QGuiApplication.primaryScreen()
         avail = screen.availableGeometry()
 
-        x = below.x() - 8
-        y = below.y() - 4
+        x = below.x()
+        y = below.y() + 3
         if y + ph > avail.bottom():        # not enough room below -> open upward
-            y = above.y() - ph + 8
+            y = above.y() - ph - 3
         popup.move(x, y)
         self._popup = popup
         popup.show()

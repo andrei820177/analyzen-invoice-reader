@@ -170,5 +170,12 @@
   "col_scanned": "Zeskanowane",
   "xl_metric": "Wskaźnik",
   "xl_value": "Wartość",
-  "company_prompt": "W Ustawieniach nie ustawiono firmy. Wpisz nazwę dla tego raportu (nie zostanie zapisana):"
+  "company_prompt": "W Ustawieniach nie ustawiono firmy. Wpisz nazwę dla tego raportu (nie zostanie zapisana):",
+  "ctx_undo": "Cofnij",
+  "ctx_redo": "Ponów",
+  "ctx_cut": "Wytnij",
+  "ctx_copy": "Kopiuj",
+  "ctx_paste": "Wklej",
+  "ctx_delete": "Usuń",
+  "ctx_select_all": "Zaznacz wszystko"
 }

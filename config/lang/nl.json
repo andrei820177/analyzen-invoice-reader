@@ -170,5 +170,12 @@
   "col_scanned": "Gescand",
   "xl_metric": "Statistiek",
   "xl_value": "Waarde",
-  "company_prompt": "Er is geen bedrijf ingesteld in Instellingen. Voer een naam in voor dit rapport (wordt niet opgeslagen):"
+  "company_prompt": "Er is geen bedrijf ingesteld in Instellingen. Voer een naam in voor dit rapport (wordt niet opgeslagen):",
+  "ctx_undo": "Ongedaan maken",
+  "ctx_redo": "Opnieuw",
+  "ctx_cut": "Knippen",
+  "ctx_copy": "Kopiëren",
+  "ctx_paste": "Plakken",
+  "ctx_delete": "Verwijderen",
+  "ctx_select_all": "Alles selecteren"
 }

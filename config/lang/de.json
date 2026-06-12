@@ -170,5 +170,12 @@
   "col_scanned": "Gescannt",
   "xl_metric": "Kennzahl",
   "xl_value": "Wert",
-  "company_prompt": "In den Einstellungen ist keine Firma festgelegt. Geben Sie einen Namen für diesen Bericht ein (wird nicht gespeichert):"
+  "company_prompt": "In den Einstellungen ist keine Firma festgelegt. Geben Sie einen Namen für diesen Bericht ein (wird nicht gespeichert):",
+  "ctx_undo": "Rückgängig",
+  "ctx_redo": "Wiederholen",
+  "ctx_cut": "Ausschneiden",
+  "ctx_copy": "Kopieren",
+  "ctx_paste": "Einfügen",
+  "ctx_delete": "Löschen",
+  "ctx_select_all": "Alles auswählen"
 }

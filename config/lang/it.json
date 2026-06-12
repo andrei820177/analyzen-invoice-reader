@@ -170,5 +170,12 @@
   "col_scanned": "Scansionato",
   "xl_metric": "Metrica",
   "xl_value": "Valore",
-  "company_prompt": "Nessuna azienda impostata nelle Impostazioni. Inserisci un nome per questo report (non verrà salvato):"
+  "company_prompt": "Nessuna azienda impostata nelle Impostazioni. Inserisci un nome per questo report (non verrà salvato):",
+  "ctx_undo": "Annulla",
+  "ctx_redo": "Ripeti",
+  "ctx_cut": "Taglia",
+  "ctx_copy": "Copia",
+  "ctx_paste": "Incolla",
+  "ctx_delete": "Elimina",
+  "ctx_select_all": "Seleziona tutto"
 }

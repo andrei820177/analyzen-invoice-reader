@@ -170,5 +170,12 @@
   "col_scanned": "Numérisé",
   "xl_metric": "Indicateur",
   "xl_value": "Valeur",
-  "company_prompt": "Aucune entreprise n'est définie dans les Paramètres. Saisissez un nom pour ce rapport (il ne sera pas enregistré) :"
+  "company_prompt": "Aucune entreprise n'est définie dans les Paramètres. Saisissez un nom pour ce rapport (il ne sera pas enregistré) :",
+  "ctx_undo": "Annuler",
+  "ctx_redo": "Rétablir",
+  "ctx_cut": "Couper",
+  "ctx_copy": "Copier",
+  "ctx_paste": "Coller",
+  "ctx_delete": "Supprimer",
+  "ctx_select_all": "Tout sélectionner"
 }

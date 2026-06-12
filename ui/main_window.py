@@ -360,6 +360,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         init_lang()
 
+        from ui.context_menu import install as install_input_menus
+        install_input_menus(self)   # themed right-click menu on all text inputs
+
         self.setWindowTitle(L().t("app_title"))
         # generous lower bound so the app stays usable on smaller resolutions
         self.setMinimumSize(880, 560)

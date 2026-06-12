@@ -170,5 +170,12 @@
   "col_scanned": "Scanned",
   "xl_metric": "Metric",
   "xl_value": "Value",
-  "company_prompt": "No company is set in Settings. Enter a name for this report (it will not be saved):"
+  "company_prompt": "No company is set in Settings. Enter a name for this report (it will not be saved):",
+  "ctx_undo": "Undo",
+  "ctx_redo": "Redo",
+  "ctx_cut": "Cut",
+  "ctx_copy": "Copy",
+  "ctx_paste": "Paste",
+  "ctx_delete": "Delete",
+  "ctx_select_all": "Select all"
 }

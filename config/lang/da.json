@@ -170,5 +170,12 @@
   "col_scanned": "Skannet",
   "xl_metric": "Måltal",
   "xl_value": "Værdi",
-  "company_prompt": "Der er ikke angivet en virksomhed i Indstillinger. Indtast et navn til denne rapport (gemmes ikke):"
+  "company_prompt": "Der er ikke angivet en virksomhed i Indstillinger. Indtast et navn til denne rapport (gemmes ikke):",
+  "ctx_undo": "Fortryd",
+  "ctx_redo": "Gentag",
+  "ctx_cut": "Klip",
+  "ctx_copy": "Kopiér",
+  "ctx_paste": "Sæt ind",
+  "ctx_delete": "Slet",
+  "ctx_select_all": "Markér alt"
 }

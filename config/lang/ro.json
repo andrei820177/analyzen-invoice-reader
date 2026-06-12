@@ -170,5 +170,12 @@
   "col_scanned": "Scanat",
   "xl_metric": "Indicator",
   "xl_value": "Valoare",
-  "company_prompt": "Nu este setata nicio companie in Setari. Introduceti un nume pentru acest raport (nu va fi salvat):"
+  "company_prompt": "Nu este setata nicio companie in Setari. Introduceti un nume pentru acest raport (nu va fi salvat):",
+  "ctx_undo": "Anuleaza",
+  "ctx_redo": "Reface",
+  "ctx_cut": "Taie",
+  "ctx_copy": "Copiaza",
+  "ctx_paste": "Lipeste",
+  "ctx_delete": "Sterge",
+  "ctx_select_all": "Selecteaza tot"
 }

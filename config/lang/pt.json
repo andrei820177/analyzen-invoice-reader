@@ -170,5 +170,12 @@
   "col_scanned": "Digitalizado",
   "xl_metric": "Métrica",
   "xl_value": "Valor",
-  "company_prompt": "Nenhuma empresa definida nas Definições. Introduza um nome para este relatório (não será guardado):"
+  "company_prompt": "Nenhuma empresa definida nas Definições. Introduza um nome para este relatório (não será guardado):",
+  "ctx_undo": "Anular",
+  "ctx_redo": "Refazer",
+  "ctx_cut": "Cortar",
+  "ctx_copy": "Copiar",
+  "ctx_paste": "Colar",
+  "ctx_delete": "Eliminar",
+  "ctx_select_all": "Selecionar tudo"
 }

@@ -170,5 +170,12 @@
   "col_scanned": "Escaneado",
   "xl_metric": "Métrica",
   "xl_value": "Valor",
-  "company_prompt": "No hay ninguna empresa definida en Ajustes. Introduce un nombre para este informe (no se guardará):"
+  "company_prompt": "No hay ninguna empresa definida en Ajustes. Introduce un nombre para este informe (no se guardará):",
+  "ctx_undo": "Deshacer",
+  "ctx_redo": "Rehacer",
+  "ctx_cut": "Cortar",
+  "ctx_copy": "Copiar",
+  "ctx_paste": "Pegar",
+  "ctx_delete": "Eliminar",
+  "ctx_select_all": "Seleccionar todo"
 }

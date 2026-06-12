@@ -245,7 +245,7 @@ class ExportPage(QWidget):
         )
         if path:
             try:
-                export_pdf(self._idf, path)
+                export_pdf(self._idf, path, _load_settings().get("company_name", ""))
                 dialogs.info(self, f"{L().t('done')}: {path}", "Export")
             except Exception as e:
                 dialogs.error(self, str(e), "Error")
@@ -277,7 +277,7 @@ class ExportPage(QWidget):
         path = os.path.join(tempfile.gettempdir(), f"raport_facturi_{stamp}.{fmt}")
         try:
             if fmt == "pdf":
-                export_pdf(self._idf, path)
+                export_pdf(self._idf, path, _load_settings().get("company_name", ""))
             else:
                 export_excel(self._idf, path)
         except Exception as e:

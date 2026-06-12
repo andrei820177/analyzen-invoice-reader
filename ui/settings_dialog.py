@@ -140,6 +140,14 @@ class SettingsDialog(QDialog):
         self._theme.setCurrentIndex(idx if idx >= 0 else 0)
         form.addRow(L().t("theme_label"), self._theme)
 
+        self._company_name = QLineEdit(self._settings.get("company_name", ""))
+        self._company_name.setStyleSheet(_INPUT_STYLE)
+        form.addRow(L().t("set_company_name"), self._company_name)
+        company_note = QLabel(L().t("set_company_note"))
+        company_note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
+        company_note.setWordWrap(True)
+        form.addRow("", company_note)
+
         watch_row = QHBoxLayout()
         self._watch_folder = QLineEdit(self._settings.get("watch_folder", ""))
         self._watch_folder.setStyleSheet(_INPUT_STYLE)
@@ -331,6 +339,7 @@ class SettingsDialog(QDialog):
         data = dict(self._settings)
         data.update({
             "theme":                     self._theme.currentData(),
+            "company_name":              self._company_name.text().strip(),
             "watch_folder":              self._watch_folder.text().strip(),
             "due_date_alert_days":       self._due_days.value(),
             "base_currency":             self._base_currency.currentText(),

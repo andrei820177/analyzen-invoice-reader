@@ -169,5 +169,6 @@
   "col_vat_rate": "Btw-tarief %",
   "col_scanned": "Gescand",
   "xl_metric": "Statistiek",
-  "xl_value": "Waarde"
+  "xl_value": "Waarde",
+  "company_prompt": "Er is geen bedrijf ingesteld in Instellingen. Voer een naam in voor dit rapport (wordt niet opgeslagen):"
 }

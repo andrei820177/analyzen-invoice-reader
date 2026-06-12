@@ -169,5 +169,6 @@
   "col_vat_rate": "MwSt-Satz %",
   "col_scanned": "Gescannt",
   "xl_metric": "Kennzahl",
-  "xl_value": "Wert"
+  "xl_value": "Wert",
+  "company_prompt": "In den Einstellungen ist keine Firma festgelegt. Geben Sie einen Namen für diesen Bericht ein (wird nicht gespeichert):"
 }

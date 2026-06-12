@@ -169,5 +169,6 @@
   "col_vat_rate": "Stawka VAT %",
   "col_scanned": "Zeskanowane",
   "xl_metric": "Wskaźnik",
-  "xl_value": "Wartość"
+  "xl_value": "Wartość",
+  "company_prompt": "W Ustawieniach nie ustawiono firmy. Wpisz nazwę dla tego raportu (nie zostanie zapisana):"
 }

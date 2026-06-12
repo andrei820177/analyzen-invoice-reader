@@ -169,5 +169,6 @@
   "col_vat_rate": "Aliquota IVA %",
   "col_scanned": "Scansionato",
   "xl_metric": "Metrica",
-  "xl_value": "Valore"
+  "xl_value": "Valore",
+  "company_prompt": "Nessuna azienda impostata nelle Impostazioni. Inserisci un nome per questo report (non verrà salvato):"
 }

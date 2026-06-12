@@ -169,5 +169,6 @@
   "col_vat_rate": "Momssats %",
   "col_scanned": "Skannet",
   "xl_metric": "Måltal",
-  "xl_value": "Værdi"
+  "xl_value": "Værdi",
+  "company_prompt": "Der er ikke angivet en virksomhed i Indstillinger. Indtast et navn til denne rapport (gemmes ikke):"
 }

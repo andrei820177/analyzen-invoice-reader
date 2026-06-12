@@ -169,5 +169,6 @@
   "col_vat_rate": "VAT rate %",
   "col_scanned": "Scanned",
   "xl_metric": "Metric",
-  "xl_value": "Value"
+  "xl_value": "Value",
+  "company_prompt": "No company is set in Settings. Enter a name for this report (it will not be saved):"
 }

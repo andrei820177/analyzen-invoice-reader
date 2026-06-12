@@ -169,5 +169,6 @@
   "col_vat_rate": "Taux TVA %",
   "col_scanned": "Numérisé",
   "xl_metric": "Indicateur",
-  "xl_value": "Valeur"
+  "xl_value": "Valeur",
+  "company_prompt": "Aucune entreprise n'est définie dans les Paramètres. Saisissez un nom pour ce rapport (il ne sera pas enregistré) :"
 }

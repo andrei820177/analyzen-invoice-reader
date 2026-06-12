@@ -169,5 +169,6 @@
   "col_vat_rate": "Tipo IVA %",
   "col_scanned": "Escaneado",
   "xl_metric": "Métrica",
-  "xl_value": "Valor"
+  "xl_value": "Valor",
+  "company_prompt": "No hay ninguna empresa definida en Ajustes. Introduce un nombre para este informe (no se guardará):"
 }

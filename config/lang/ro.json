@@ -169,5 +169,6 @@
   "col_vat_rate": "Cota TVA %",
   "col_scanned": "Scanat",
   "xl_metric": "Indicator",
-  "xl_value": "Valoare"
+  "xl_value": "Valoare",
+  "company_prompt": "Nu este setata nicio companie in Setari. Introduceti un nume pentru acest raport (nu va fi salvat):"
 }

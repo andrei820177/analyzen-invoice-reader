@@ -169,5 +169,6 @@
   "col_vat_rate": "Taxa IVA %",
   "col_scanned": "Digitalizado",
   "xl_metric": "Métrica",
-  "xl_value": "Valor"
+  "xl_value": "Valor",
+  "company_prompt": "Nenhuma empresa definida nas Definições. Introduza um nome para este relatório (não será guardado):"
 }

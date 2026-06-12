@@ -240,15 +240,30 @@ class ExportPage(QWidget):
         if not self._idf or len(self._idf) == 0:
             dialogs.info(self, L().t("no_invoices"), "Export")
             return
+        company = self._company_for_report()
+        if company is None:        # cancelled at the company prompt
+            return
         path = dialogs.get_save_file(
             self, L().t("export_pdf"), f"{L().t('file_report_name')}.pdf", "PDF (*.pdf)"
         )
         if path:
             try:
-                export_pdf(self._idf, path, _load_settings().get("company_name", ""))
+                export_pdf(self._idf, path, company)
                 dialogs.info(self, f"{L().t('done')}: {path}", "Export")
             except Exception as e:
                 dialogs.error(self, str(e), "Error")
+
+    def _company_for_report(self):
+        """Company name for the PDF cover. Uses the saved one, or asks for a
+        one-off value (not persisted) when none is set. Returns None if the
+        user cancels the prompt."""
+        company = _load_settings().get("company_name", "").strip()
+        if company:
+            return company
+        return dialogs.get_text(
+            self, L().t("report_for"), L().t("company_prompt"),
+            placeholder="ACME SRL",
+        )
 
     def _export_email(self) -> None:
         if not self._idf or len(self._idf) == 0:
@@ -270,6 +285,13 @@ class ExportPage(QWidget):
             return
         fmt = "pdf" if clicked is pdf_btn else "xlsx"
 
+        # the PDF report has a cover that needs a company name
+        company = ""
+        if fmt == "pdf":
+            company = self._company_for_report()
+            if company is None:    # cancelled at the company prompt
+                return
+
         # 2) generate the report to a temp file
         import tempfile
         from datetime import datetime
@@ -278,7 +300,7 @@ class ExportPage(QWidget):
         path = os.path.join(tempfile.gettempdir(), f"{name}_{stamp}.{fmt}")
         try:
             if fmt == "pdf":
-                export_pdf(self._idf, path, _load_settings().get("company_name", ""))
+                export_pdf(self._idf, path, company)
             else:
                 export_excel(self._idf, path)
         except Exception as e:

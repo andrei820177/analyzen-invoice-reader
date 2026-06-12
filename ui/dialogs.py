@@ -6,7 +6,10 @@ theme). File/folder pickers are intentionally left as the native Windows
 dialogs -- the OS browser is more capable and familiar than a styled Qt one.
 """
 
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
+from PyQt6.QtWidgets import (
+    QDialog, QDialogButtonBox, QFileDialog, QLabel, QLineEdit, QMessageBox,
+    QVBoxLayout,
+)
 
 from ui.theme import C
 
@@ -81,6 +84,48 @@ def accent_button_css() -> str:
         "border-radius:7px;padding:5px 14px;min-width:74px;font-size:12px;font-weight:600;}"
         f"QPushButton:hover{{background:{C('accent_press')};}}"
     )
+
+
+def get_text(parent, title: str, label: str, default: str = "",
+             placeholder: str = ""):
+    """Themed single-line text prompt. Returns the text, or None if cancelled."""
+    dlg = QDialog(parent)
+    dlg.setWindowTitle(title)
+    dlg.setMinimumWidth(400)
+    dlg.setStyleSheet(
+        f"QDialog{{background:{C('surface')};}}"
+        f"QLabel{{color:{C('ink')};background:transparent;}}"
+        f"QLineEdit{{background:{C('surface')};color:{C('ink')};"
+        f"border:1px solid {C('line')};border-radius:8px;padding:6px 10px;"
+        f"font-size:13px;min-height:26px;}}"
+        f"QLineEdit:focus{{border-color:{C('accent')};}}"
+        f"QPushButton{{background:{C('surface2')};color:{C('ink')};"
+        f"border:1px solid {C('line')};border-radius:7px;padding:6px 16px;"
+        "min-width:80px;font-size:12px;font-weight:600;}"
+        f"QPushButton:hover{{background:{C('surface3')};}}"
+        f"QPushButton:default{{background:{C('accent')};color:{C('on_accent')};border:none;}}"
+        f"QPushButton:default:hover{{background:{C('accent_press')};}}"
+    )
+    v = QVBoxLayout(dlg)
+    v.setContentsMargins(18, 16, 18, 14)
+    v.setSpacing(11)
+    lbl = QLabel(label)
+    lbl.setWordWrap(True)
+    edit = QLineEdit(default)
+    if placeholder:
+        edit.setPlaceholderText(placeholder)
+    buttons = QDialogButtonBox(
+        QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+    )
+    buttons.accepted.connect(dlg.accept)
+    buttons.rejected.connect(dlg.reject)
+    v.addWidget(lbl)
+    v.addWidget(edit)
+    v.addWidget(buttons)
+    edit.setFocus()
+    if dlg.exec() == QDialog.DialogCode.Accepted:
+        return edit.text().strip()
+    return None
 
 
 # --------------------------------------------------------------------------

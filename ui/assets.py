@@ -25,5 +25,22 @@ def logo_full() -> str:
 
 
 def app_icon() -> str:
-    """Window/taskbar icon (full logo on its solid brand tile)."""
-    return asset_path("darkmode_logo.png")
+    """Path to the multi-resolution .ico (used for the packaged exe)."""
+    return asset_path("app.ico")
+
+
+def app_qicon():
+    """A QIcon carrying every provided icon size, so Windows picks the crisp
+    one for the title bar, taskbar and Alt-Tab."""
+    from PyQt6.QtGui import QIcon
+
+    icon = QIcon()
+    added = False
+    for size in (16, 32, 48, 64, 128, 256, 512):
+        p = asset_path(os.path.join("taskbar_icon", f"icon-{size}.png"))
+        if os.path.isfile(p):
+            icon.addFile(p)
+            added = True
+    if not added:
+        icon.addFile(app_icon())
+    return icon

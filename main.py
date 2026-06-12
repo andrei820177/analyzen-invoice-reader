@@ -44,13 +44,22 @@ def apply_light_theme(app: QApplication) -> None:
 
 
 def main() -> None:
+    # Make Windows show our taskbar icon (not python.exe's) by giving the
+    # process its own explicit AppUserModelID. Must run before any window.
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                "Analyzen.InvoiceReader")
+        except Exception:
+            pass
+
     app = QApplication(sys.argv)
     app.setApplicationName("Analyzen Invoice Reader")
     app.setOrganizationName("Analyzen")
     apply_palette(app)
-    from PyQt6.QtGui import QIcon
-    from ui.assets import app_icon
-    app.setWindowIcon(QIcon(app_icon()))
+    from ui.assets import app_qicon
+    app.setWindowIcon(app_qicon())
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

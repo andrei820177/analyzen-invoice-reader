@@ -260,6 +260,10 @@ class ExportPage(QWidget):
         pdf_btn = box.addButton("PDF", QMessageBox.ButtonRole.AcceptRole)
         xls_btn = box.addButton("Excel", QMessageBox.ButtonRole.AcceptRole)
         box.addButton(QMessageBox.StandardButton.Cancel)
+        # PDF and Excel are equivalent choices -> give them the same accent look
+        # (QMessageBox would otherwise style only the default button)
+        pdf_btn.setStyleSheet(dialogs.accent_button_css())
+        xls_btn.setStyleSheet(dialogs.accent_button_css())
         box.exec()
         clicked = box.clickedButton()
         if clicked not in (pdf_btn, xls_btn):

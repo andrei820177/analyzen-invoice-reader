@@ -327,6 +327,9 @@ class Sidebar(QWidget):
         self._active = "dashboard"
         self._nav_items["dashboard"].set_active(True)
 
+        # nav + summary stay hidden until a file/folder has been processed
+        self.set_data_loaded(False)
+
     def _on_nav(self, key: str) -> None:
         if key == self._active:
             return
@@ -342,6 +345,12 @@ class Sidebar(QWidget):
         for key, item in self._nav_items.items():
             if key in counts:
                 item.set_count(int(counts[key]))
+
+    def set_data_loaded(self, has_data: bool) -> None:
+        """Show the menu section + nav rows only once there is data."""
+        self._section_lbl.setVisible(has_data)
+        for item in self._nav_items.values():
+            item.setVisible(has_data)
 
     def set_summary(self, total_text: str,
                     chips: list, health: tuple) -> None:

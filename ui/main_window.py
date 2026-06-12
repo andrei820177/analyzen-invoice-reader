@@ -774,6 +774,7 @@ class MainWindow(QMainWindow):
             self._on_page_changed("dashboard")
 
     def _update_sidebar(self) -> None:
+        self._sidebar.set_data_loaded(len(self._idf) > 0)
         stats = self._idf.get_sidebar_stats()
         self._sidebar.set_counts({"invoices": stats["count"]})
         # full-precision amounts, one currency per row in the card

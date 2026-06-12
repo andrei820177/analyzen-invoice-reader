@@ -159,5 +159,15 @@
   "col_due": "Vence",
   "col_net": "Líquido",
   "set_company_name": "Nome da empresa:",
-  "set_company_note": "Aparece na capa do relatório PDF (Preparado para)."
+  "set_company_note": "Aparece na capa do relatório PDF (Preparado para).",
+  "file_report_name": "relatorio_faturas",
+  "file_export_name": "exportacao_faturas",
+  "word_yes": "Sim",
+  "word_no": "Não",
+  "col_tax_id": "NIF",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Taxa IVA %",
+  "col_scanned": "Digitalizado",
+  "xl_metric": "Métrica",
+  "xl_value": "Valor"
 }

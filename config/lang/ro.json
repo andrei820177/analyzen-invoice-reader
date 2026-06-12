@@ -159,5 +159,15 @@
   "col_due": "Scadenta",
   "col_net": "Net",
   "set_company_name": "Nume companie:",
-  "set_company_note": "Apare pe coperta raportului PDF (Pregatit pentru)."
+  "set_company_note": "Apare pe coperta raportului PDF (Pregatit pentru).",
+  "file_report_name": "raport_facturi",
+  "file_export_name": "export_facturi",
+  "word_yes": "Da",
+  "word_no": "Nu",
+  "col_tax_id": "CUI",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Cota TVA %",
+  "col_scanned": "Scanat",
+  "xl_metric": "Indicator",
+  "xl_value": "Valoare"
 }

@@ -159,5 +159,15 @@
   "col_due": "Vence",
   "col_net": "Neto",
   "set_company_name": "Nombre de la empresa:",
-  "set_company_note": "Aparece en la portada del informe PDF (Preparado para)."
+  "set_company_note": "Aparece en la portada del informe PDF (Preparado para).",
+  "file_report_name": "informe_facturas",
+  "file_export_name": "exportacion_facturas",
+  "word_yes": "Sí",
+  "word_no": "No",
+  "col_tax_id": "NIF",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Tipo IVA %",
+  "col_scanned": "Escaneado",
+  "xl_metric": "Métrica",
+  "xl_value": "Valor"
 }

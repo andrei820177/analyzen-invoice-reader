@@ -159,5 +159,15 @@
   "col_due": "Срок",
   "col_net": "Без НДС",
   "set_company_name": "Название компании:",
-  "set_company_note": "Отображается на обложке PDF-отчёта (Подготовлено для)."
+  "set_company_note": "Отображается на обложке PDF-отчёта (Подготовлено для).",
+  "file_report_name": "otchet_scheta",
+  "file_export_name": "eksport_schetov",
+  "word_yes": "Да",
+  "word_no": "Нет",
+  "col_tax_id": "ИНН",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Ставка НДС %",
+  "col_scanned": "Скан",
+  "xl_metric": "Показатель",
+  "xl_value": "Значение"
 }

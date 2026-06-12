@@ -159,5 +159,15 @@
   "col_due": "Due",
   "col_net": "Net",
   "set_company_name": "Company name:",
-  "set_company_note": "Shown on the PDF report cover (Prepared for)."
+  "set_company_note": "Shown on the PDF report cover (Prepared for).",
+  "file_report_name": "invoice_report",
+  "file_export_name": "invoices_export",
+  "word_yes": "Yes",
+  "word_no": "No",
+  "col_tax_id": "Tax ID",
+  "col_iban": "IBAN",
+  "col_vat_rate": "VAT rate %",
+  "col_scanned": "Scanned",
+  "xl_metric": "Metric",
+  "xl_value": "Value"
 }

@@ -159,5 +159,15 @@
   "col_due": "Fällig",
   "col_net": "Netto",
   "set_company_name": "Firmenname:",
-  "set_company_note": "Erscheint auf dem Deckblatt des PDF-Berichts (Erstellt für)."
+  "set_company_note": "Erscheint auf dem Deckblatt des PDF-Berichts (Erstellt für).",
+  "file_report_name": "rechnungsbericht",
+  "file_export_name": "rechnungen_export",
+  "word_yes": "Ja",
+  "word_no": "Nein",
+  "col_tax_id": "USt-IdNr.",
+  "col_iban": "IBAN",
+  "col_vat_rate": "MwSt-Satz %",
+  "col_scanned": "Gescannt",
+  "xl_metric": "Kennzahl",
+  "xl_value": "Wert"
 }

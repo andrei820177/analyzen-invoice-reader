@@ -159,5 +159,15 @@
   "col_due": "Verval",
   "col_net": "Netto",
   "set_company_name": "Bedrijfsnaam:",
-  "set_company_note": "Verschijnt op de omslag van het PDF-rapport (Opgesteld voor)."
+  "set_company_note": "Verschijnt op de omslag van het PDF-rapport (Opgesteld voor).",
+  "file_report_name": "factuurrapport",
+  "file_export_name": "facturen_export",
+  "word_yes": "Ja",
+  "word_no": "Nee",
+  "col_tax_id": "Btw-nr.",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Btw-tarief %",
+  "col_scanned": "Gescand",
+  "xl_metric": "Statistiek",
+  "xl_value": "Waarde"
 }

@@ -10,6 +10,9 @@ from openpyxl.styles import (
 )
 from openpyxl.utils import get_column_letter
 
+from core.currency import base_currency
+from ui.lang import L
+
 if TYPE_CHECKING:
     from data.processor import InvoiceDataFrame
 
@@ -57,8 +60,18 @@ def _autofit_columns(ws) -> None:
         ws.column_dimensions[col_letter].width = min(max_len + 4, 40)
 
 
+def _sheet_title(text: str) -> str:
+    """Excel sheet titles: <=31 chars and no []:*?/\\ characters."""
+    for ch in "[]:*?/\\":
+        text = text.replace(ch, " ")
+    return text[:31].strip() or "Sheet"
+
+
 def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
     """Export all invoices to a multi-sheet Excel file. Returns the output path."""
+    t = L().t
+    base = base_currency()
+    yes, no = t("word_yes"), t("word_no")
     df = idf.get_all()
     summary = idf.get_summary()
 
@@ -66,13 +79,14 @@ def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
 
     # ---- Sheet 1: All invoices ----
     ws_all = wb.active
-    ws_all.title = "Facturi"
+    ws_all.title = _sheet_title(t("nav_invoices"))
 
     headers_all = [
-        "Fisier", "Furnizor", "CUI", "IBAN", "Nr. Factura",
-        "Data Emitere", "Scadenta", "Subtotal", "TVA", "Cota TVA %",
-        "Total", "Moneda", "Categorie", "Incredere", "Scanat",
-        "Duplicat", "Valoare Atipica", "Scadenta Apropiata",
+        t("col_file"), t("col_supplier"), t("col_tax_id"), t("col_iban"),
+        t("col_invoice_no"), t("col_issue"), t("col_due"), t("col_net"),
+        t("col_vat"), t("col_vat_rate"), t("col_total"), t("col_currency"),
+        t("col_category"), t("col_confidence"), t("col_scanned"),
+        t("reason_duplicate"), t("reason_outlier"), t("reason_near_due"),
     ]
     _apply_header_row(ws_all, headers_all)
     ws_all.row_dimensions[1].height = 20
@@ -99,10 +113,10 @@ def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
             row["currency"],
             row["category"],
             f"{row['confidence_score']:.0%}",
-            "Da" if row["is_scanned"] else "Nu",
-            "Da" if row["is_duplicate"] else "Nu",
-            "Da" if row["is_outlier"] else "Nu",
-            "Da" if row["is_near_due"] else "Nu",
+            yes if row["is_scanned"] else no,
+            yes if row["is_duplicate"] else no,
+            yes if row["is_outlier"] else no,
+            yes if row["is_near_due"] else no,
         ]
         fill = None
         if row["is_duplicate"]:
@@ -124,19 +138,19 @@ def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
     _autofit_columns(ws_all)
 
     # ---- Sheet 2: Summary ----
-    ws_sum = wb.create_sheet("Sumar")
-    ws_sum["A1"] = "Indicator"
-    ws_sum["B1"] = "Valoare"
+    ws_sum = wb.create_sheet(_sheet_title(t("report_exec_summary")))
+    ws_sum["A1"] = t("xl_metric")
+    ws_sum["B1"] = t("xl_value")
     ws_sum["A1"].fill = _header_fill()
     ws_sum["A1"].font = _header_font()
     ws_sum["B1"].fill = _header_fill()
     ws_sum["B1"].font = _header_font()
 
     rows = [
-        ("Total facturi", summary["total_invoices"]),
-        ("Valoare totala", f"{summary['total_value']:,.2f}"),
-        ("TVA total", f"{summary['total_vat']:,.2f}"),
-        ("Semnalizate", summary["flagged_count"]),
+        (t("kpi_total_invoices"), summary["total_invoices"]),
+        (f"{t('kpi_total_value')} ({base})", f"{summary['total_value']:,.2f}"),
+        (f"{t('kpi_total_vat')} ({base})", f"{summary['total_vat']:,.2f}"),
+        (t("kpi_flagged"), summary["flagged_count"]),
     ]
     for i, (k, v) in enumerate(rows, 2):
         ws_sum.cell(row=i, column=1, value=k).border = _border()
@@ -144,9 +158,9 @@ def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
 
     # Per category
     row_idx = len(rows) + 3
-    ws_sum.cell(row=row_idx, column=1, value="Categorie").fill = _header_fill()
+    ws_sum.cell(row=row_idx, column=1, value=t("col_category")).fill = _header_fill()
     ws_sum.cell(row=row_idx, column=1).font = _header_font()
-    ws_sum.cell(row=row_idx, column=2, value="Total (RON)").fill = _header_fill()
+    ws_sum.cell(row=row_idx, column=2, value=f"{t('col_total')} ({base})").fill = _header_fill()
     ws_sum.cell(row=row_idx, column=2).font = _header_font()
     for cat, val in sorted(summary["per_category"].items(), key=lambda x: -x[1]):
         row_idx += 1
@@ -156,7 +170,7 @@ def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
     _autofit_columns(ws_sum)
 
     # ---- Sheet 3: Flagged invoices ----
-    ws_flagged = wb.create_sheet("Semnalizate")
+    ws_flagged = wb.create_sheet(_sheet_title(t("report_flagged")))
     flagged_df = df[df["is_duplicate"] | df["is_outlier"] | df["is_near_due"]]
     _apply_header_row(ws_flagged, headers_all)
     for r, (_, row) in enumerate(flagged_df.iterrows(), 2):
@@ -168,10 +182,10 @@ def export_excel(idf: "InvoiceDataFrame", output_path: str) -> str:
             row["subtotal"], row["vat_amount"], row["vat_rate"],
             row["total"], row["currency"], row["category"],
             f"{row['confidence_score']:.0%}",
-            "Da" if row["is_scanned"] else "Nu",
-            "Da" if row["is_duplicate"] else "Nu",
-            "Da" if row["is_outlier"] else "Nu",
-            "Da" if row["is_near_due"] else "Nu",
+            yes if row["is_scanned"] else no,
+            yes if row["is_duplicate"] else no,
+            yes if row["is_outlier"] else no,
+            yes if row["is_near_due"] else no,
         ]
         for c, val in enumerate(values, 1):
             ws_flagged.cell(row=r, column=c, value=val).border = _border()

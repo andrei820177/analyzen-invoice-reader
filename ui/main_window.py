@@ -227,7 +227,7 @@ class ExportPage(QWidget):
             dialogs.info(self, L().t("no_invoices"), "Export")
             return
         path = dialogs.get_save_file(
-            self, L().t("export_excel"), "facturi_export.xlsx", "Excel (*.xlsx)"
+            self, L().t("export_excel"), f"{L().t('file_export_name')}.xlsx", "Excel (*.xlsx)"
         )
         if path:
             try:
@@ -241,7 +241,7 @@ class ExportPage(QWidget):
             dialogs.info(self, L().t("no_invoices"), "Export")
             return
         path = dialogs.get_save_file(
-            self, L().t("export_pdf"), "raport_facturi.pdf", "PDF (*.pdf)"
+            self, L().t("export_pdf"), f"{L().t('file_report_name')}.pdf", "PDF (*.pdf)"
         )
         if path:
             try:
@@ -274,7 +274,8 @@ class ExportPage(QWidget):
         import tempfile
         from datetime import datetime
         stamp = datetime.now().strftime("%Y%m%d")
-        path = os.path.join(tempfile.gettempdir(), f"raport_facturi_{stamp}.{fmt}")
+        name = L().t("file_report_name") if fmt == "pdf" else L().t("file_export_name")
+        path = os.path.join(tempfile.gettempdir(), f"{name}_{stamp}.{fmt}")
         try:
             if fmt == "pdf":
                 export_pdf(self._idf, path, _load_settings().get("company_name", ""))

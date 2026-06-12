@@ -159,5 +159,15 @@
   "col_due": "Termin",
   "col_net": "Netto",
   "set_company_name": "Nazwa firmy:",
-  "set_company_note": "Pojawia się na okładce raportu PDF (Przygotowano dla)."
+  "set_company_note": "Pojawia się na okładce raportu PDF (Przygotowano dla).",
+  "file_report_name": "raport_faktur",
+  "file_export_name": "eksport_faktur",
+  "word_yes": "Tak",
+  "word_no": "Nie",
+  "col_tax_id": "NIP",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Stawka VAT %",
+  "col_scanned": "Zeskanowane",
+  "xl_metric": "Wskaźnik",
+  "xl_value": "Wartość"
 }

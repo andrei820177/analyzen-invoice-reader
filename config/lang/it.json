@@ -159,5 +159,15 @@
   "col_due": "Scadenza",
   "col_net": "Netto",
   "set_company_name": "Nome azienda:",
-  "set_company_note": "Compare sulla copertina del report PDF (Preparato per)."
+  "set_company_note": "Compare sulla copertina del report PDF (Preparato per).",
+  "file_report_name": "report_fatture",
+  "file_export_name": "esportazione_fatture",
+  "word_yes": "Sì",
+  "word_no": "No",
+  "col_tax_id": "P. IVA",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Aliquota IVA %",
+  "col_scanned": "Scansionato",
+  "xl_metric": "Metrica",
+  "xl_value": "Valore"
 }

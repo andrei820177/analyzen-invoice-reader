@@ -159,5 +159,15 @@
   "col_due": "Échéance",
   "col_net": "Net",
   "set_company_name": "Nom de l'entreprise :",
-  "set_company_note": "Apparaît sur la couverture du rapport PDF (Préparé pour)."
+  "set_company_note": "Apparaît sur la couverture du rapport PDF (Préparé pour).",
+  "file_report_name": "rapport_factures",
+  "file_export_name": "export_factures",
+  "word_yes": "Oui",
+  "word_no": "Non",
+  "col_tax_id": "N° TVA",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Taux TVA %",
+  "col_scanned": "Numérisé",
+  "xl_metric": "Indicateur",
+  "xl_value": "Valeur"
 }

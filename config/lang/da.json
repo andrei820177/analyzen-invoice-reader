@@ -159,5 +159,15 @@
   "col_due": "Forfald",
   "col_net": "Netto",
   "set_company_name": "Firmanavn:",
-  "set_company_note": "Vises på PDF-rapportens forside (Udarbejdet til)."
+  "set_company_note": "Vises på PDF-rapportens forside (Udarbejdet til).",
+  "file_report_name": "fakturarapport",
+  "file_export_name": "faktura_eksport",
+  "word_yes": "Ja",
+  "word_no": "Nej",
+  "col_tax_id": "CVR",
+  "col_iban": "IBAN",
+  "col_vat_rate": "Momssats %",
+  "col_scanned": "Skannet",
+  "xl_metric": "Måltal",
+  "xl_value": "Værdi"
 }

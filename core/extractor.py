@@ -85,7 +85,7 @@ def extract_invoice(file_path: str) -> Invoice:
         for li in fields["line_items"]
     ]
 
-    inv.category = classify_invoice(inv)
+    inv.category = classify_invoice(inv, raw_text)
     return inv
 
 

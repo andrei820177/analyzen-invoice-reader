@@ -730,12 +730,12 @@ class MainWindow(QMainWindow):
                 self._btn_watch.setText(L().t("btn_stop_watch"))
                 self._log.append(f"{L().t('btn_watch')}: {folder}", "success")
 
-    def _on_new_pdf_detected(self, path: str) -> None:
+    def _on_new_pdf_detected(self, paths: List[str]) -> None:
         from PyQt6.QtCore import QMetaObject, Q_ARG
         QMetaObject.invokeMethod(
             self, "_process_files_slot",
             Qt.ConnectionType.QueuedConnection,
-            Q_ARG(object, [path]),
+            Q_ARG(object, paths),
         )
 
     @pyqtSlot(object)

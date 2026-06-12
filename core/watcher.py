@@ -2,7 +2,7 @@ import logging
 import os
 import threading
 import time
-from typing import Callable
+from typing import Callable, List
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -13,7 +13,7 @@ _DEBOUNCE_SECONDS = 2.0
 
 
 class _PDFHandler(FileSystemEventHandler):
-    def __init__(self, callback: Callable[[str], None]) -> None:
+    def __init__(self, callback: Callable[[List[str]], None]) -> None:
         super().__init__()
         self._callback = callback
         self._pending: dict[str, float] = {}
@@ -43,13 +43,14 @@ class _PDFHandler(FileSystemEventHandler):
             ready = [p for p, t in self._pending.items() if now >= t]
             for p in ready:
                 del self._pending[p]
-        for path in ready:
-            if os.path.isfile(path):
-                logger.info("Watcher: new PDF detected: %s", path)
-                try:
-                    self._callback(path)
-                except Exception as e:
-                    logger.error("Watcher callback error for %s: %s", path, e)
+        
+        valid_paths = [p for p in ready if os.path.isfile(p)]
+        if valid_paths:
+            logger.info("Watcher: processing batch of %d PDFs", len(valid_paths))
+            try:
+                self._callback(valid_paths)
+            except Exception as e:
+                logger.error("Watcher callback error: %s", e)
 
 
 class FolderWatcher:
@@ -57,7 +58,7 @@ class FolderWatcher:
         self._observer: Observer | None = None
         self._folder: str = ""
 
-    def start(self, folder_path: str, callback: Callable[[str], None]) -> None:
+    def start(self, folder_path: str, callback: Callable[[List[str]], None]) -> None:
         self.stop()
         self._folder = folder_path
         handler = _PDFHandler(callback)

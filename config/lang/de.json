@@ -115,5 +115,9 @@
   "set_choose_tesseract": "tesseract.exe wählen",
   "set_exe_filter": "Ausführbare Dateien (*.exe)",
   "set_outlier_mult": "Standardabw.-Multiplikator:",
-  "set_conf_threshold": "Min. Konfidenzschwelle:"
+  "set_conf_threshold": "Min. Konfidenzschwelle:",
+  "recent_folders": "Zuletzt verwendete Ordner",
+  "recent_empty": "Keine zuletzt verwendeten Ordner",
+  "recent_clear": "Verlauf löschen",
+  "folder_missing": "Ordner existiert nicht mehr"
 }

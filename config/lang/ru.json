@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Выбрать tesseract.exe",
   "set_exe_filter": "Исполняемые файлы (*.exe)",
   "set_outlier_mult": "Множитель станд. откл.:",
-  "set_conf_threshold": "Мин. порог уверенности:"
+  "set_conf_threshold": "Мин. порог уверенности:",
+  "recent_folders": "Недавние папки",
+  "recent_empty": "Нет недавних папок",
+  "recent_clear": "Очистить историю",
+  "folder_missing": "Папка больше не существует"
 }

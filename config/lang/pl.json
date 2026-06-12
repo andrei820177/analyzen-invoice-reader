@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Wybierz tesseract.exe",
   "set_exe_filter": "Pliki wykonywalne (*.exe)",
   "set_outlier_mult": "Mnożnik odch. std.:",
-  "set_conf_threshold": "Minimalny próg pewności:"
+  "set_conf_threshold": "Minimalny próg pewności:",
+  "recent_folders": "Ostatnie foldery",
+  "recent_empty": "Brak ostatnich folderów",
+  "recent_clear": "Wyczyść historię",
+  "folder_missing": "Folder już nie istnieje"
 }

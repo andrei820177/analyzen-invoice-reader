@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Selecionar tesseract.exe",
   "set_exe_filter": "Executáveis (*.exe)",
   "set_outlier_mult": "Multiplicador desvio padrão:",
-  "set_conf_threshold": "Limiar mínimo de confiança:"
+  "set_conf_threshold": "Limiar mínimo de confiança:",
+  "recent_folders": "Pastas recentes",
+  "recent_empty": "Sem pastas recentes",
+  "recent_clear": "Limpar histórico",
+  "folder_missing": "A pasta já não existe"
 }

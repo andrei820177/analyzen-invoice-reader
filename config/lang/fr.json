@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Choisir tesseract.exe",
   "set_exe_filter": "Exécutables (*.exe)",
   "set_outlier_mult": "Multiplicateur d'écart-type :",
-  "set_conf_threshold": "Seuil de confiance min. :"
+  "set_conf_threshold": "Seuil de confiance min. :",
+  "recent_folders": "Dossiers récents",
+  "recent_empty": "Aucun dossier récent",
+  "recent_clear": "Effacer l'historique",
+  "folder_missing": "Le dossier n'existe plus"
 }

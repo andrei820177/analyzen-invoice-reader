@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Seleziona tesseract.exe",
   "set_exe_filter": "Eseguibili (*.exe)",
   "set_outlier_mult": "Moltiplicatore dev. std.:",
-  "set_conf_threshold": "Soglia minima di confidenza:"
+  "set_conf_threshold": "Soglia minima di confidenza:",
+  "recent_folders": "Cartelle recenti",
+  "recent_empty": "Nessuna cartella recente",
+  "recent_clear": "Cancella cronologia",
+  "folder_missing": "La cartella non esiste più"
 }

@@ -115,5 +115,9 @@
   "set_choose_tesseract": "tesseract.exe kiezen",
   "set_exe_filter": "Uitvoerbare bestanden (*.exe)",
   "set_outlier_mult": "Std.-dev. vermenigvuldiger:",
-  "set_conf_threshold": "Min. betrouwbaarheidsdrempel:"
+  "set_conf_threshold": "Min. betrouwbaarheidsdrempel:",
+  "recent_folders": "Recente mappen",
+  "recent_empty": "Geen recente mappen",
+  "recent_clear": "Geschiedenis wissen",
+  "folder_missing": "Map bestaat niet meer"
 }

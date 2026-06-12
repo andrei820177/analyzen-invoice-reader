@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Select tesseract.exe",
   "set_exe_filter": "Executables (*.exe)",
   "set_outlier_mult": "Std-dev multiplier:",
-  "set_conf_threshold": "Min. confidence threshold:"
+  "set_conf_threshold": "Min. confidence threshold:",
+  "recent_folders": "Recent folders",
+  "recent_empty": "No recent folders",
+  "recent_clear": "Clear history",
+  "folder_missing": "Folder no longer exists"
 }

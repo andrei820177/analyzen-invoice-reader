@@ -5,11 +5,11 @@ import os
 import time
 from typing import List
 
-from PyQt6.QtCore import QObject, QThread, Qt, QTimer, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QObject, QPoint, QThread, Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel, QMainWindow,
-    QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
+    QMenu, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QWidget,
 )
 
@@ -352,9 +352,19 @@ class MainWindow(QMainWindow):
         self._btn_watch       = self._make_header_btn("btn_watch",       primary=False)
         self._btn_clear       = self._make_header_btn("btn_clear",       primary=False)
 
-        for btn in (self._btn_open_files, self._btn_open_folder,
-                    self._btn_watch, self._btn_clear):
-            hl.addWidget(btn)
+        # "Open folder" + a small caret that drops down the recent-folders menu
+        self._btn_recent = self._make_caret_btn()
+        folder_group = QWidget()
+        fg = QHBoxLayout(folder_group)
+        fg.setContentsMargins(0, 0, 0, 0)
+        fg.setSpacing(2)
+        fg.addWidget(self._btn_open_folder)
+        fg.addWidget(self._btn_recent)
+
+        hl.addWidget(self._btn_open_files)
+        hl.addWidget(folder_group)
+        hl.addWidget(self._btn_watch)
+        hl.addWidget(self._btn_clear)
 
         content_layout.addWidget(self._header)
 
@@ -409,6 +419,20 @@ class MainWindow(QMainWindow):
             )
         return btn
 
+    def _make_caret_btn(self) -> QPushButton:
+        btn = QPushButton("▾")
+        btn.setFixedHeight(32)
+        btn.setFixedWidth(26)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn.setToolTip(L().t("recent_folders"))
+        btn.setStyleSheet(
+            f"QPushButton {{ background: {C('surface')}; color: {C('ink3')}; border-radius: 8px;"
+            f" border: 1px solid {C('line')}; font-size: 11px; }}"
+            f"QPushButton:hover {{ background: {C('surface3')}; color: {C('accent')}; }}"
+            f"QPushButton:disabled {{ color: {C('ink4')}; }}"
+        )
+        return btn
+
     # ------------------------------------------------------------------
     # Signal connections
     # ------------------------------------------------------------------
@@ -420,6 +444,7 @@ class MainWindow(QMainWindow):
 
         self._btn_open_files.clicked.connect(self._open_files)
         self._btn_open_folder.clicked.connect(self._open_folder)
+        self._btn_recent.clicked.connect(self._show_recent_menu)
         self._btn_watch.clicked.connect(self._toggle_watch)
         self._btn_clear.clicked.connect(self._clear_data)
 
@@ -455,6 +480,7 @@ class MainWindow(QMainWindow):
 
         if self._watcher.is_running:
             self._btn_watch.setText(L().t("btn_stop_watch"))
+        self._btn_recent.setToolTip(L().t("recent_folders"))
 
         self._sidebar.retranslate()
         self._drop_zone.retranslate()
@@ -498,7 +524,13 @@ class MainWindow(QMainWindow):
 
     def _open_folder(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, L().t("btn_open_folder"))
-        if not folder:
+        if folder:
+            self._process_folder(folder)
+
+    def _process_folder(self, folder: str) -> None:
+        if not os.path.isdir(folder):
+            QMessageBox.information(self, "Info", L().t("folder_missing"))
+            self._remove_recent(folder)
             return
         paths = [
             os.path.join(folder, f)
@@ -506,9 +538,79 @@ class MainWindow(QMainWindow):
             if f.lower().endswith(".pdf")
         ]
         if paths:
+            self._add_recent(folder)
             self._process_files(paths)
         else:
             QMessageBox.information(self, "Info", L().t("no_invoices"))
+
+    # ------------------------------------------------------------------
+    # Recent folders (history for "Open folder")
+    # ------------------------------------------------------------------
+
+    def _recent_folders(self) -> list:
+        recents = _load_settings().get("recent_folders", [])
+        return [p for p in recents if isinstance(p, str)]
+
+    def _save_recent(self, recents: list) -> None:
+        try:
+            with open(_SETTINGS_PATH, encoding="utf-8") as f:
+                s = json.load(f)
+        except Exception:
+            s = {}
+        s["recent_folders"] = recents
+        try:
+            with open(_SETTINGS_PATH, "w", encoding="utf-8") as f:
+                json.dump(s, f, indent=2, ensure_ascii=False)
+        except Exception:
+            pass
+
+    def _add_recent(self, folder: str) -> None:
+        folder = os.path.normpath(folder)
+        recents = [p for p in self._recent_folders()
+                   if os.path.normpath(p).lower() != folder.lower()]
+        recents.insert(0, folder)
+        self._save_recent(recents[:8])
+
+    def _remove_recent(self, folder: str) -> None:
+        target = os.path.normpath(folder).lower()
+        self._save_recent([p for p in self._recent_folders()
+                            if os.path.normpath(p).lower() != target])
+
+    def _clear_recent(self) -> None:
+        self._save_recent([])
+
+    def _show_recent_menu(self) -> None:
+        menu = QMenu(self)
+        menu.setStyleSheet(
+            f"QMenu{{background:{C('surface')};border:1px solid {C('line')};"
+            "border-radius:8px;padding:5px;}"
+            f"QMenu::item{{color:{C('ink')};padding:6px 12px;border-radius:6px;}}"
+            f"QMenu::item:selected{{background:{C('surface3')};color:{C('ink')};}}"
+            f"QMenu::item:disabled{{color:{C('ink4')};}}"
+            f"QMenu::separator{{height:1px;background:{C('line')};margin:4px 6px;}}"
+        )
+        recents = self._recent_folders()
+        if not recents:
+            act = menu.addAction(L().t("recent_empty"))
+            act.setEnabled(False)
+        else:
+            for path in recents:
+                act = menu.addAction(self._short_path(path))
+                act.setToolTip(path)
+                act.triggered.connect(lambda _checked, p=path: self._process_folder(p))
+            menu.addSeparator()
+            clear = menu.addAction(L().t("recent_clear"))
+            clear.triggered.connect(self._clear_recent)
+        menu.exec(self._btn_recent.mapToGlobal(QPoint(0, self._btn_recent.height() + 2)))
+
+    @staticmethod
+    def _short_path(path: str, max_len: int = 48) -> str:
+        name = os.path.basename(path.rstrip("/\\")) or path
+        parent = os.path.basename(os.path.dirname(path.rstrip("/\\")))
+        label = f"{parent}/{name}" if parent else name
+        if len(path) <= max_len:
+            return path
+        return "..." + os.sep + label
 
     def _toggle_watch(self) -> None:
         if self._watcher.is_running:
@@ -547,6 +649,7 @@ class MainWindow(QMainWindow):
         self._progress_bar.reset()
         self._btn_open_files.setEnabled(False)
         self._btn_open_folder.setEnabled(False)
+        self._btn_recent.setEnabled(False)
         self._collected_invoices = []
 
         self._worker = InvoiceWorker(paths, max_workers=settings.get("max_workers", 0))
@@ -576,6 +679,7 @@ class MainWindow(QMainWindow):
         self._progress_strip.setVisible(False)
         self._btn_open_files.setEnabled(True)
         self._btn_open_folder.setEnabled(True)
+        self._btn_recent.setEnabled(True)
 
         count = len(invoices)
         self._log.append(L().t("log_done", count, elapsed), "success")

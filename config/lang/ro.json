@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Selecteaza tesseract.exe",
   "set_exe_filter": "Executabile (*.exe)",
   "set_outlier_mult": "Multiplicator deviatia standard:",
-  "set_conf_threshold": "Prag incredere minima:"
+  "set_conf_threshold": "Prag incredere minima:",
+  "recent_folders": "Foldere recente",
+  "recent_empty": "Niciun folder recent",
+  "recent_clear": "Sterge istoricul",
+  "folder_missing": "Folderul nu mai exista"
 }

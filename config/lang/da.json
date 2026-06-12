@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Vælg tesseract.exe",
   "set_exe_filter": "Eksekverbare filer (*.exe)",
   "set_outlier_mult": "Std.afv.-multiplikator:",
-  "set_conf_threshold": "Min. konfidenstærskel:"
+  "set_conf_threshold": "Min. konfidenstærskel:",
+  "recent_folders": "Seneste mapper",
+  "recent_empty": "Ingen seneste mapper",
+  "recent_clear": "Ryd historik",
+  "folder_missing": "Mappen findes ikke længere"
 }

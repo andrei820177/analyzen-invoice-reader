@@ -115,5 +115,9 @@
   "set_choose_tesseract": "Seleccionar tesseract.exe",
   "set_exe_filter": "Ejecutables (*.exe)",
   "set_outlier_mult": "Multiplicador desv. estándar:",
-  "set_conf_threshold": "Umbral mínimo de confianza:"
+  "set_conf_threshold": "Umbral mínimo de confianza:",
+  "recent_folders": "Carpetas recientes",
+  "recent_empty": "Sin carpetas recientes",
+  "recent_clear": "Borrar historial",
+  "folder_missing": "La carpeta ya no existe"
 }

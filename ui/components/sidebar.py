@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import List, Tuple
 
 from PyQt6.QtCore import pyqtSignal, QRectF, Qt
-from PyQt6.QtGui import QColor, QPainter, QPainterPath
+from PyQt6.QtGui import QColor, QPainter, QPainterPath, QPixmap
 from PyQt6.QtWidgets import (
     QFrame, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget,
 )
+from ui.assets import logo_mark
 from ui.components.language_toggle import LanguageToggle
 from ui.lang import L
 from ui.theme import C, register_reload
@@ -233,19 +234,13 @@ class Sidebar(QWidget):
         ll.setContentsMargins(4, 14, 4, 10)
         ll.setSpacing(10)
 
-        brand_mark = QLabel("A")
-        brand_mark.setFixedSize(30, 30)
-        brand_mark.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        brand_mark.setStyleSheet(
-            "QLabel {"
-            "  background: qlineargradient(x1:0,y1:0,x2:1,y2:1,"
-            f"    stop:0 {C('accent')}, stop:1 {C('accent_press')});"
-            "  border-radius: 8px;"
-            "  color: white;"
-            "  font-size: 14px;"
-            "  font-weight: bold;"
-            "}"
-        )
+        brand_mark = QLabel()
+        brand_mark.setStyleSheet("background: transparent;")
+        _mark = QPixmap(logo_mark())
+        if not _mark.isNull():
+            brand_mark.setPixmap(_mark.scaledToHeight(
+                32, Qt.TransformationMode.SmoothTransformation))
+        brand_mark.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         brand_texts = QWidget()
         brand_texts.setStyleSheet("background: transparent;")

@@ -9,15 +9,17 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
-from reportlab.graphics.shapes import Drawing, Rect, String
+from reportlab.graphics.shapes import Drawing
 from reportlab.graphics.charts.barcharts import VerticalBarChart, HorizontalBarChart
 from reportlab.graphics.charts.piecharts import Pie
 from reportlab.graphics.charts.legends import Legend
 from reportlab.platypus import (
-    HRFlowable, PageBreak, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle,
+    HRFlowable, Image as RLImage, PageBreak, Paragraph, SimpleDocTemplate,
+    Spacer, Table, TableStyle,
 )
 
 from core.currency import base_currency, convert
+from ui.assets import asset_path
 from ui.lang import L
 
 if TYPE_CHECKING:
@@ -70,13 +72,13 @@ def _valid_dates(series):
     return out
 
 
+_MARK_RATIO = 264 / 171  # width / height of the cropped logo mark
+
+
 def _logo(size: float = 40):
-    d = Drawing(size, size)
-    d.add(Rect(0, 0, size, size, rx=9, ry=9, fillColor=_PRIMARY, strokeColor=None))
-    d.add(String(size / 2, size / 2 - size * 0.18, "A",
-                 fontSize=size * 0.52, fillColor=colors.white,
-                 textAnchor="middle", fontName="Helvetica-Bold"))
-    return d
+    """The Analyzen icon mark (ink-on-transparent) at the given height."""
+    return RLImage(asset_path("mark_light.png"),
+                   width=size * _MARK_RATIO, height=size)
 
 
 # --------------------------------------------------------------------------

@@ -48,6 +48,9 @@ def main() -> None:
     app.setApplicationName("Analyzen Invoice Reader")
     app.setOrganizationName("Analyzen")
     apply_palette(app)
+    from PyQt6.QtGui import QIcon
+    from ui.assets import app_icon
+    app.setWindowIcon(QIcon(app_icon()))
     window = MainWindow()
     window.show()
     sys.exit(app.exec())

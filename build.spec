@@ -7,6 +7,7 @@ block_cipher = None
 added_files = [
     ("config", "config"),
     ("ui", "ui"),
+    ("assets", "assets"),
 ]
 
 # Include bundled Tesseract if present in tools/tesseract/
@@ -50,6 +51,9 @@ a = Analysis(
         "ui.components.progress_bar",
         "ui.components.flag_badge",
         "ui.components.language_toggle",
+        "ui.assets",
+        "ui.dialogs",
+        "export.outlook_sender",
     ],
     hookspath=[],
     hooksconfig={},
@@ -83,5 +87,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon=os.path.join("assets", "app.ico"),
 )

@@ -60,7 +60,9 @@ class _NavItem(QFrame):
         self._badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         h.addWidget(self._label)
         h.addStretch()
-        h.addWidget(self._badge)
+        # vertical-center so the badge keeps its natural height (a tall, stretched
+        # label would make the rounded background look boxy instead of a pill)
+        h.addWidget(self._badge, 0, Qt.AlignmentFlag.AlignVCenter)
 
         self._apply()
 

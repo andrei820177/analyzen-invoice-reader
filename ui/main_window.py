@@ -677,7 +677,13 @@ class MainWindow(QMainWindow):
         self._save_recent([])
 
     def _show_recent_menu(self) -> None:
+        # toggle: a click on the caret while the menu is open dismisses it (the
+        # menu closes on press, the button then gets the release) -- don't reopen
+        if time.monotonic() - getattr(self, "_recent_menu_closed_at", 0.0) < 0.2:
+            return
         menu = QMenu(self)
+        menu.aboutToHide.connect(
+            lambda: setattr(self, "_recent_menu_closed_at", time.monotonic()))
         menu.setStyleSheet(
             f"QMenu{{background:{C('surface')};border:1px solid {C('line')};"
             "border-radius:8px;padding:5px;}"

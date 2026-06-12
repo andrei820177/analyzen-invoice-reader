@@ -119,5 +119,9 @@
   "recent_folders": "Recente mappen",
   "recent_empty": "Geen recente mappen",
   "recent_clear": "Geschiedenis wissen",
-  "folder_missing": "Map bestaat niet meer"
+  "folder_missing": "Map bestaat niet meer",
+  "email_choose_format": "Welk rapport wil je bijvoegen?",
+  "email_subject": "Factuurrapport",
+  "email_body": "Hallo,\n\nBijgevoegd vindt u het factuurrapport.\n\nMet vriendelijke groet,",
+  "outlook_missing": "Outlook is niet beschikbaar op deze computer."
 }

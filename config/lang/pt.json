@@ -119,5 +119,9 @@
   "recent_folders": "Pastas recentes",
   "recent_empty": "Sem pastas recentes",
   "recent_clear": "Limpar histórico",
-  "folder_missing": "A pasta já não existe"
+  "folder_missing": "A pasta já não existe",
+  "email_choose_format": "Que relatório pretende anexar?",
+  "email_subject": "Relatório de faturas",
+  "email_body": "Olá,\n\nEm anexo encontra o relatório de faturas.\n\nCumprimentos,",
+  "outlook_missing": "O Outlook não está disponível neste computador."
 }

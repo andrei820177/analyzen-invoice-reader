@@ -20,6 +20,7 @@ from data.models import Invoice
 from data.processor import InvoiceDataFrame
 from data.validator import validate_batch
 from export.excel_exporter import export_excel
+from export.outlook_sender import open_with_attachment
 from export.pdf_reporter import export_pdf
 from ui.components.progress_bar import ProcessingProgressBar
 from ui.components.sidebar import Sidebar
@@ -247,7 +248,50 @@ class ExportPage(QWidget):
                 QMessageBox.critical(self, "Error", str(e))
 
     def _export_email(self) -> None:
-        QMessageBox.information(self, "Email", L().t("settings_email"))
+        if not self._idf or len(self._idf) == 0:
+            QMessageBox.information(self, "Email", L().t("no_invoices"))
+            return
+
+        # 1) choose which report to attach
+        box = QMessageBox(self)
+        box.setWindowTitle(L().t("export_email"))
+        box.setText(L().t("email_choose_format"))
+        pdf_btn = box.addButton("PDF", QMessageBox.ButtonRole.AcceptRole)
+        xls_btn = box.addButton("Excel", QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked not in (pdf_btn, xls_btn):
+            return
+        fmt = "pdf" if clicked is pdf_btn else "xlsx"
+
+        # 2) generate the report to a temp file
+        import tempfile
+        from datetime import datetime
+        stamp = datetime.now().strftime("%Y%m%d")
+        path = os.path.join(tempfile.gettempdir(), f"raport_facturi_{stamp}.{fmt}")
+        try:
+            if fmt == "pdf":
+                export_pdf(self._idf, path)
+            else:
+                export_excel(self._idf, path)
+        except Exception as e:
+            QMessageBox.critical(self, "Error", str(e))
+            return
+
+        # 3) open Outlook with the report attached
+        settings = _load_settings()
+        to = settings.get("smtp_to", "")
+        if isinstance(to, list):
+            to = "; ".join(str(t) for t in to if t)
+        ok = open_with_attachment(
+            path,
+            to=to,
+            subject=L().t("email_subject"),
+            body=L().t("email_body"),
+        )
+        if not ok:
+            QMessageBox.warning(self, L().t("export_email"), L().t("outlook_missing"))
 
 
 # ---------------------------------------------------------------------------

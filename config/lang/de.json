@@ -119,5 +119,9 @@
   "recent_folders": "Zuletzt verwendete Ordner",
   "recent_empty": "Keine zuletzt verwendeten Ordner",
   "recent_clear": "Verlauf löschen",
-  "folder_missing": "Ordner existiert nicht mehr"
+  "folder_missing": "Ordner existiert nicht mehr",
+  "email_choose_format": "Welchen Bericht möchten Sie anhängen?",
+  "email_subject": "Rechnungsbericht",
+  "email_body": "Hallo,\n\nim Anhang finden Sie den Rechnungsbericht.\n\nMit freundlichen Grüßen",
+  "outlook_missing": "Outlook ist auf diesem Computer nicht verfügbar."
 }

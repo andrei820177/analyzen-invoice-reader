@@ -119,5 +119,9 @@
   "recent_folders": "Cartelle recenti",
   "recent_empty": "Nessuna cartella recente",
   "recent_clear": "Cancella cronologia",
-  "folder_missing": "La cartella non esiste più"
+  "folder_missing": "La cartella non esiste più",
+  "email_choose_format": "Quale report vuoi allegare?",
+  "email_subject": "Report fatture",
+  "email_body": "Salve,\n\nin allegato il report delle fatture.\n\nCordiali saluti,",
+  "outlook_missing": "Outlook non è disponibile su questo computer."
 }

@@ -123,5 +123,10 @@
   "email_choose_format": "Który raport chcesz załączyć?",
   "email_subject": "Raport faktur",
   "email_body": "Dzień dobry,\n\nW załączeniu raport faktur.\n\nPozdrawiam,",
-  "outlook_missing": "Outlook nie jest dostępny na tym komputerze."
+  "outlook_missing": "Outlook nie jest dostępny na tym komputerze.",
+  "set_email_method": "Wyślij przez:",
+  "email_method_outlook": "Outlook (komputer)",
+  "email_method_default": "Domyślna aplikacja poczty",
+  "set_email_method_note": "Outlook na komputerze załącza raport automatycznie. Domyślna aplikacja ('zwykła' poczta, nowy Outlook itp.) otwiera wiadomość i folder raportu; załączasz go ręcznie.",
+  "email_attach_manual": "Raport został zapisany, a jego folder otwarty. Załącz go ręcznie do wiadomości:\n{}"
 }

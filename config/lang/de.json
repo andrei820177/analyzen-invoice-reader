@@ -123,5 +123,10 @@
   "email_choose_format": "Welchen Bericht möchten Sie anhängen?",
   "email_subject": "Rechnungsbericht",
   "email_body": "Hallo,\n\nim Anhang finden Sie den Rechnungsbericht.\n\nMit freundlichen Grüßen",
-  "outlook_missing": "Outlook ist auf diesem Computer nicht verfügbar."
+  "outlook_missing": "Outlook ist auf diesem Computer nicht verfügbar.",
+  "set_email_method": "Senden über:",
+  "email_method_outlook": "Outlook (Desktop)",
+  "email_method_default": "Standard-E-Mail-App",
+  "set_email_method_note": "Outlook Desktop hängt den Bericht automatisch an. Die Standard-App (das 'normale' Mail, neues Outlook usw.) öffnet die Nachricht und den Ordner des Berichts; Sie hängen ihn manuell an.",
+  "email_attach_manual": "Der Bericht wurde gespeichert und sein Ordner geöffnet. Hängen Sie ihn manuell an die E-Mail an:\n{}"
 }

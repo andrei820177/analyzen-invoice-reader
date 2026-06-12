@@ -123,5 +123,10 @@
   "email_choose_format": "Quale report vuoi allegare?",
   "email_subject": "Report fatture",
   "email_body": "Salve,\n\nin allegato il report delle fatture.\n\nCordiali saluti,",
-  "outlook_missing": "Outlook non è disponibile su questo computer."
+  "outlook_missing": "Outlook non è disponibile su questo computer.",
+  "set_email_method": "Invia tramite:",
+  "email_method_outlook": "Outlook (desktop)",
+  "email_method_default": "App di posta predefinita",
+  "set_email_method_note": "Outlook desktop allega il report automaticamente. L'app predefinita (la posta 'normale', il nuovo Outlook, ecc.) apre il messaggio e la cartella del report; lo alleghi manualmente.",
+  "email_attach_manual": "Il report è stato salvato e la sua cartella aperta. Allegalo manualmente all'email:\n{}"
 }

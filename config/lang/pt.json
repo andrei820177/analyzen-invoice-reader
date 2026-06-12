@@ -123,5 +123,10 @@
   "email_choose_format": "Que relatório pretende anexar?",
   "email_subject": "Relatório de faturas",
   "email_body": "Olá,\n\nEm anexo encontra o relatório de faturas.\n\nCumprimentos,",
-  "outlook_missing": "O Outlook não está disponível neste computador."
+  "outlook_missing": "O Outlook não está disponível neste computador.",
+  "set_email_method": "Enviar via:",
+  "email_method_outlook": "Outlook (ambiente de trabalho)",
+  "email_method_default": "Aplicação de e-mail predefinida",
+  "set_email_method_note": "O Outlook desktop anexa o relatório automaticamente. A aplicação predefinida (o correio 'normal', o novo Outlook, etc.) abre a mensagem e a pasta do relatório; anexa-o manualmente.",
+  "email_attach_manual": "O relatório foi guardado e a sua pasta aberta. Anexe-o manualmente ao e-mail:\n{}"
 }

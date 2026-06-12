@@ -5,8 +5,12 @@ import os
 import time
 from typing import List
 
-from PyQt6.QtCore import QObject, QPoint, QThread, Qt, QTimer, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QDragEnterEvent, QDropEvent, QKeySequence, QShortcut
+from PyQt6.QtCore import (
+    QObject, QPoint, QThread, Qt, QTimer, QUrl, QUrlQuery, pyqtSignal, pyqtSlot,
+)
+from PyQt6.QtGui import (
+    QDesktopServices, QDragEnterEvent, QDropEvent, QKeySequence, QShortcut,
+)
 from PyQt6.QtWidgets import (
     QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel, QMainWindow,
     QMenu, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
@@ -279,19 +283,44 @@ class ExportPage(QWidget):
             QMessageBox.critical(self, "Error", str(e))
             return
 
-        # 3) open Outlook with the report attached
+        # 3) hand the report to a mail client
         settings = _load_settings()
         to = settings.get("smtp_to", "")
         if isinstance(to, list):
             to = "; ".join(str(t) for t in to if t)
-        ok = open_with_attachment(
-            path,
-            to=to,
-            subject=L().t("email_subject"),
-            body=L().t("email_body"),
-        )
-        if not ok:
-            QMessageBox.warning(self, L().t("export_email"), L().t("outlook_missing"))
+        subject = L().t("email_subject")
+        body = L().t("email_body")
+
+        if settings.get("email_method", "outlook") == "mailto":
+            # default mail client: mailto can't carry an attachment, so open
+            # the compose window and reveal the saved report for manual attach
+            self._open_default_mail(to, subject, body)
+            self._reveal_file(path)
+            QMessageBox.information(
+                self, L().t("export_email"),
+                L().t("email_attach_manual", path),
+            )
+        else:
+            ok = open_with_attachment(path, to=to, subject=subject, body=body)
+            if not ok:
+                QMessageBox.warning(self, L().t("export_email"), L().t("outlook_missing"))
+
+    def _open_default_mail(self, to: str, subject: str, body: str) -> None:
+        url = QUrl("mailto:" + (to or ""))
+        q = QUrlQuery()
+        q.addQueryItem("subject", subject)
+        q.addQueryItem("body", body)
+        url.setQuery(q)
+        QDesktopServices.openUrl(url)
+
+    def _reveal_file(self, path: str) -> None:
+        """Open the file's folder with the file selected (Windows Explorer)."""
+        path = os.path.normpath(path)
+        try:
+            import subprocess
+            subprocess.Popen(["explorer", f"/select,{path}"])
+        except Exception:
+            QDesktopServices.openUrl(QUrl.fromLocalFile(os.path.dirname(path)))
 
 
 # ---------------------------------------------------------------------------

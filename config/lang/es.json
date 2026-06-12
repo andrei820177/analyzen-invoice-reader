@@ -123,5 +123,10 @@
   "email_choose_format": "¿Qué informe quieres adjuntar?",
   "email_subject": "Informe de facturas",
   "email_body": "Hola,\n\nAdjunto encontrará el informe de facturas.\n\nUn saludo,",
-  "outlook_missing": "Outlook no está disponible en este equipo."
+  "outlook_missing": "Outlook no está disponible en este equipo.",
+  "set_email_method": "Enviar mediante:",
+  "email_method_outlook": "Outlook (escritorio)",
+  "email_method_default": "App de correo predeterminada",
+  "set_email_method_note": "Outlook de escritorio adjunta el informe automáticamente. La app predeterminada (el correo 'normal', el nuevo Outlook, etc.) abre el mensaje y la carpeta del informe; lo adjuntas manualmente.",
+  "email_attach_manual": "El informe se guardó y se abrió su carpeta. Adjúntalo manualmente al correo:\n{}"
 }

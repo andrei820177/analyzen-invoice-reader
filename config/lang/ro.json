@@ -123,5 +123,10 @@
   "email_choose_format": "Ce raport atasezi la email?",
   "email_subject": "Raport facturi",
   "email_body": "Buna ziua,\n\nAtasat gasiti raportul de facturi.\n\nO zi buna,",
-  "outlook_missing": "Outlook nu este disponibil pe acest calculator."
+  "outlook_missing": "Outlook nu este disponibil pe acest calculator.",
+  "set_email_method": "Trimite prin:",
+  "email_method_outlook": "Outlook (desktop)",
+  "email_method_default": "Aplicatia de mail implicita",
+  "set_email_method_note": "Outlook desktop ataseaza raportul automat. Aplicatia implicita (mailul 'normal', noul Outlook, etc.) deschide mesajul si folderul cu raportul; il atasezi manual.",
+  "email_attach_manual": "Raportul a fost salvat si folderul a fost deschis. Ataseaza-l manual la email:\n{}"
 }

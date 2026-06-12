@@ -123,5 +123,10 @@
   "email_choose_format": "Hvilken rapport vil du vedhæfte?",
   "email_subject": "Fakturarapport",
   "email_body": "Hej,\n\nVedhæftet finder du fakturarapporten.\n\nVenlig hilsen,",
-  "outlook_missing": "Outlook er ikke tilgængelig på denne computer."
+  "outlook_missing": "Outlook er ikke tilgængelig på denne computer.",
+  "set_email_method": "Send via:",
+  "email_method_outlook": "Outlook (computer)",
+  "email_method_default": "Standard mailapp",
+  "set_email_method_note": "Outlook på computeren vedhæfter rapporten automatisk. Standard-appen (den 'normale' mail, nye Outlook osv.) åbner beskeden og rapportens mappe; du vedhæfter den manuelt.",
+  "email_attach_manual": "Rapporten blev gemt, og dens mappe blev åbnet. Vedhæft den manuelt til e-mailen:\n{}"
 }

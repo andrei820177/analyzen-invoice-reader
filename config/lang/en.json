@@ -123,5 +123,10 @@
   "email_choose_format": "Which report do you want to attach?",
   "email_subject": "Invoice report",
   "email_body": "Hello,\n\nPlease find the invoice report attached.\n\nBest regards,",
-  "outlook_missing": "Outlook is not available on this computer."
+  "outlook_missing": "Outlook is not available on this computer.",
+  "set_email_method": "Send via:",
+  "email_method_outlook": "Outlook (desktop)",
+  "email_method_default": "Default mail app",
+  "set_email_method_note": "Outlook desktop attaches the report automatically. The default app (the 'normal' mail, new Outlook, etc.) opens the message and the report's folder; you attach it manually.",
+  "email_attach_manual": "The report was saved and its folder opened. Attach it to the email manually:\n{}"
 }

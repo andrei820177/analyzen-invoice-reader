@@ -123,5 +123,10 @@
   "email_choose_format": "Welk rapport wil je bijvoegen?",
   "email_subject": "Factuurrapport",
   "email_body": "Hallo,\n\nBijgevoegd vindt u het factuurrapport.\n\nMet vriendelijke groet,",
-  "outlook_missing": "Outlook is niet beschikbaar op deze computer."
+  "outlook_missing": "Outlook is niet beschikbaar op deze computer.",
+  "set_email_method": "Verzenden via:",
+  "email_method_outlook": "Outlook (desktop)",
+  "email_method_default": "Standaard mail-app",
+  "set_email_method_note": "Outlook desktop voegt het rapport automatisch toe. De standaard-app (de 'normale' mail, nieuwe Outlook, enz.) opent het bericht en de map van het rapport; je voegt het handmatig toe.",
+  "email_attach_manual": "Het rapport is opgeslagen en de map is geopend. Voeg het handmatig toe aan de e-mail:\n{}"
 }

@@ -123,5 +123,10 @@
   "email_choose_format": "Quel rapport voulez-vous joindre ?",
   "email_subject": "Rapport de factures",
   "email_body": "Bonjour,\n\nVeuillez trouver ci-joint le rapport de factures.\n\nCordialement,",
-  "outlook_missing": "Outlook n'est pas disponible sur cet ordinateur."
+  "outlook_missing": "Outlook n'est pas disponible sur cet ordinateur.",
+  "set_email_method": "Envoyer via :",
+  "email_method_outlook": "Outlook (bureau)",
+  "email_method_default": "Application de messagerie par défaut",
+  "set_email_method_note": "Outlook bureau joint le rapport automatiquement. L'application par défaut (messagerie 'normale', nouvel Outlook, etc.) ouvre le message et le dossier du rapport ; vous le joignez manuellement.",
+  "email_attach_manual": "Le rapport a été enregistré et son dossier ouvert. Joignez-le manuellement à l'e-mail :\n{}"
 }

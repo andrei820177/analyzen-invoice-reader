@@ -226,6 +226,20 @@ class SettingsDialog(QDialog):
         form.setContentsMargins(16, 16, 16, 16)
         form.setSpacing(12)
 
+        # how "Send email report" opens a message
+        self._email_method = NoScrollComboBox()
+        self._email_method.setStyleSheet(_INPUT_STYLE)
+        self._email_method.addItem(L().t("email_method_outlook"), "outlook")
+        self._email_method.addItem(L().t("email_method_default"), "mailto")
+        idx = self._email_method.findData(self._settings.get("email_method", "outlook"))
+        self._email_method.setCurrentIndex(idx if idx >= 0 else 0)
+        form.addRow(L().t("set_email_method"), self._email_method)
+
+        method_note = QLabel(L().t("set_email_method_note"))
+        method_note.setStyleSheet(f"color:{C('ink3')};font-size:11px;")
+        method_note.setWordWrap(True)
+        form.addRow("", method_note)
+
         self._smtp_host = QLineEdit(self._settings.get("smtp_host", ""))
         self._smtp_host.setStyleSheet(_INPUT_STYLE)
         self._smtp_host.setPlaceholderText("smtp.gmail.com")
@@ -327,6 +341,7 @@ class SettingsDialog(QDialog):
             "smtp_password":             self._smtp_pass.text(),
             "smtp_from":                 self._smtp_from.text().strip(),
             "smtp_to":                   to_list,
+            "email_method":              self._email_method.currentData(),
             "outlier_std_dev_multiplier": self._outlier_mult.value(),
             "confidence_threshold":      self._conf_threshold.value(),
             "show_log":                  self._show_log.isChecked(),

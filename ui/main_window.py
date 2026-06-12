@@ -12,7 +12,7 @@ from PyQt6.QtGui import (
     QDesktopServices, QDragEnterEvent, QDropEvent, QKeySequence, QShortcut,
 )
 from PyQt6.QtWidgets import (
-    QApplication, QFileDialog, QFrame, QHBoxLayout, QLabel, QMainWindow,
+    QApplication, QFrame, QHBoxLayout, QLabel, QMainWindow,
     QMenu, QMessageBox, QPushButton, QSizePolicy, QStackedWidget,
     QVBoxLayout, QWidget,
 )
@@ -26,6 +26,7 @@ from data.validator import validate_batch
 from export.excel_exporter import export_excel
 from export.outlook_sender import open_with_attachment
 from export.pdf_reporter import export_pdf
+from ui import dialogs
 from ui.components.progress_bar import ProcessingProgressBar
 from ui.components.sidebar import Sidebar
 from ui.dashboard import DashboardPage
@@ -146,9 +147,7 @@ class DropZone(QWidget):
         self._btn.setText(L().t("btn_open_files"))
 
     def _open_file_dialog(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(
-            self, L().t("btn_open_files"), "", "PDF Files (*.pdf)"
-        )
+        paths = dialogs.get_open_files(self, L().t("btn_open_files"), "PDF Files (*.pdf)")
         if paths:
             self.files_dropped.emit(paths)
 
@@ -225,41 +224,39 @@ class ExportPage(QWidget):
 
     def _export_excel(self) -> None:
         if not self._idf or len(self._idf) == 0:
-            QMessageBox.information(self, "Export", L().t("no_invoices"))
+            dialogs.info(self, L().t("no_invoices"), "Export")
             return
-        path, _ = QFileDialog.getSaveFileName(
+        path = dialogs.get_save_file(
             self, L().t("export_excel"), "facturi_export.xlsx", "Excel (*.xlsx)"
         )
         if path:
             try:
                 export_excel(self._idf, path)
-                QMessageBox.information(self, "Export", f"{L().t('done')}: {path}")
+                dialogs.info(self, f"{L().t('done')}: {path}", "Export")
             except Exception as e:
-                QMessageBox.critical(self, "Error", str(e))
+                dialogs.error(self, str(e), "Error")
 
     def _export_pdf_rep(self) -> None:
         if not self._idf or len(self._idf) == 0:
-            QMessageBox.information(self, "Export", L().t("no_invoices"))
+            dialogs.info(self, L().t("no_invoices"), "Export")
             return
-        path, _ = QFileDialog.getSaveFileName(
+        path = dialogs.get_save_file(
             self, L().t("export_pdf"), "raport_facturi.pdf", "PDF (*.pdf)"
         )
         if path:
             try:
                 export_pdf(self._idf, path)
-                QMessageBox.information(self, "Export", f"{L().t('done')}: {path}")
+                dialogs.info(self, f"{L().t('done')}: {path}", "Export")
             except Exception as e:
-                QMessageBox.critical(self, "Error", str(e))
+                dialogs.error(self, str(e), "Error")
 
     def _export_email(self) -> None:
         if not self._idf or len(self._idf) == 0:
-            QMessageBox.information(self, "Email", L().t("no_invoices"))
+            dialogs.info(self, L().t("no_invoices"), "Email")
             return
 
         # 1) choose which report to attach
-        box = QMessageBox(self)
-        box.setWindowTitle(L().t("export_email"))
-        box.setText(L().t("email_choose_format"))
+        box = dialogs.themed_box(self, L().t("email_choose_format"), L().t("export_email"))
         pdf_btn = box.addButton("PDF", QMessageBox.ButtonRole.AcceptRole)
         xls_btn = box.addButton("Excel", QMessageBox.ButtonRole.AcceptRole)
         box.addButton(QMessageBox.StandardButton.Cancel)
@@ -280,7 +277,7 @@ class ExportPage(QWidget):
             else:
                 export_excel(self._idf, path)
         except Exception as e:
-            QMessageBox.critical(self, "Error", str(e))
+            dialogs.error(self, str(e), "Error")
             return
 
         # 3) hand the report to a mail client
@@ -296,14 +293,11 @@ class ExportPage(QWidget):
             # the compose window and reveal the saved report for manual attach
             self._open_default_mail(to, subject, body)
             self._reveal_file(path)
-            QMessageBox.information(
-                self, L().t("export_email"),
-                L().t("email_attach_manual", path),
-            )
+            dialogs.info(self, L().t("email_attach_manual", path), L().t("export_email"))
         else:
             ok = open_with_attachment(path, to=to, subject=subject, body=body)
             if not ok:
-                QMessageBox.warning(self, L().t("export_email"), L().t("outlook_missing"))
+                dialogs.warn(self, L().t("outlook_missing"), L().t("export_email"))
 
     def _open_default_mail(self, to: str, subject: str, body: str) -> None:
         url = QUrl("mailto:" + (to or ""))
@@ -589,20 +583,20 @@ class MainWindow(QMainWindow):
     # ------------------------------------------------------------------
 
     def _open_files(self) -> None:
-        paths, _ = QFileDialog.getOpenFileNames(
-            self, L().t("btn_open_files"), "", "PDF Files (*.pdf)"
+        paths = dialogs.get_open_files(
+            self, L().t("btn_open_files"), "PDF Files (*.pdf)"
         )
         if paths:
             self._process_files(paths)
 
     def _open_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, L().t("btn_open_folder"))
+        folder = dialogs.get_existing_dir(self, L().t("btn_open_folder"))
         if folder:
             self._process_folder(folder)
 
     def _process_folder(self, folder: str) -> None:
         if not os.path.isdir(folder):
-            QMessageBox.information(self, "Info", L().t("folder_missing"))
+            dialogs.info(self, L().t("folder_missing"), "Info")
             self._remove_recent(folder)
             return
         paths = [
@@ -614,7 +608,7 @@ class MainWindow(QMainWindow):
             self._add_recent(folder)
             self._process_files(paths)
         else:
-            QMessageBox.information(self, "Info", L().t("no_invoices"))
+            dialogs.info(self, L().t("no_invoices"), "Info")
 
     # ------------------------------------------------------------------
     # Recent folders (history for "Open folder")
@@ -694,7 +688,7 @@ class MainWindow(QMainWindow):
             settings = _load_settings()
             folder = settings.get("watch_folder", "").strip()
             if not folder:
-                folder = QFileDialog.getExistingDirectory(self, L().t("btn_watch"))
+                folder = dialogs.get_existing_dir(self, L().t("btn_watch"))
             if folder:
                 self._watcher.start(folder, self._on_new_pdf_detected)
                 self._btn_watch.setText(L().t("btn_stop_watch"))
@@ -714,7 +708,7 @@ class MainWindow(QMainWindow):
 
     def _process_files(self, paths: List[str]) -> None:
         if self._worker_thread and self._worker_thread.isRunning():
-            QMessageBox.warning(self, "Info", L().t("processing"))
+            dialogs.warn(self, L().t("processing"), "Info")
             return
 
         settings = _load_settings()
@@ -806,11 +800,7 @@ class MainWindow(QMainWindow):
     def _clear_data(self) -> None:
         if len(self._idf) == 0:
             return
-        reply = QMessageBox.question(
-            self, L().t("btn_clear"), L().t("confirm_clear"),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-        )
-        if reply == QMessageBox.StandardButton.Yes:
+        if dialogs.question(self, L().t("confirm_clear"), L().t("btn_clear")):
             self._idf.clear()
             self._table_view.clear()
             self._dashboard.update_summary(self._idf.get_summary())
@@ -851,7 +841,7 @@ class MainWindow(QMainWindow):
     def _apply_theme(self, mode: str) -> None:
         """Switch theme live: rebuild the UI from refreshed tokens, keep data."""
         if self._worker_thread and self._worker_thread.isRunning():
-            QMessageBox.information(self, L().t("app_title"), L().t("theme_restart"))
+            dialogs.info(self, L().t("theme_restart"), L().t("app_title"))
             return
         THEME.set_mode(mode)
         reload_all()                       # refresh module-level colour caches

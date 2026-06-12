@@ -2,11 +2,12 @@ import json
 import os
 
 from PyQt6.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog,
+    QCheckBox, QComboBox, QDialog, QDialogButtonBox,
     QFormLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
     QSpinBox, QDoubleSpinBox, QTabWidget, QVBoxLayout, QWidget,
 )
 from core.currency import SOURCE_LABELS
+from ui import dialogs
 from ui.components.widgets import NoScrollComboBox
 from ui.lang import L
 from ui.theme import C, register_reload
@@ -313,13 +314,13 @@ class SettingsDialog(QDialog):
         return w
 
     def _browse_watch_folder(self) -> None:
-        folder = QFileDialog.getExistingDirectory(self, L().t("set_choose_folder"))
+        folder = dialogs.get_existing_dir(self, L().t("set_choose_folder"))
         if folder:
             self._watch_folder.setText(folder)
 
     def _browse_tesseract(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(
-            self, L().t("set_choose_tesseract"), "", L().t("set_exe_filter")
+        path = dialogs.get_open_file(
+            self, L().t("set_choose_tesseract"), L().t("set_exe_filter")
         )
         if path:
             self._tesseract_path.setText(path)

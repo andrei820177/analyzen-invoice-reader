@@ -740,12 +740,15 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(object)
     def _process_files_slot(self, paths) -> None:
-        self._process_files(paths)
+        # files arriving from the folder watcher add to the current set
+        self._process_files(paths, append=True)
 
-    def _process_files(self, paths: List[str]) -> None:
+    def _process_files(self, paths: List[str], append: bool = False) -> None:
         if self._worker_thread and self._worker_thread.isRunning():
             dialogs.warn(self, L().t("processing"), "Info")
             return
+        # an explicit open replaces the dataset; the watcher appends to it
+        self._pending_append = append
 
         settings = _load_settings()
         self._progress_strip.setVisible(True)
@@ -773,6 +776,8 @@ class MainWindow(QMainWindow):
     @pyqtSlot(float)
     def _on_processing_done(self, elapsed: float) -> None:
         invoices = self._collected_invoices
+        if not getattr(self, "_pending_append", False):
+            self._idf.clear()       # explicit open -> show only the new set
         validate_batch(invoices)
         self._idf.add_invoices(invoices)
 

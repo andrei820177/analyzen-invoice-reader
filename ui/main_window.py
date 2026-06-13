@@ -624,7 +624,19 @@ class MainWindow(QMainWindow):
         if folder:
             self._process_folder(folder)
 
-    def _process_folder(self, folder: str) -> None:
+    def _add_folder(self) -> None:
+        """Pick a folder and append its PDFs to the current set (deduplicated)."""
+        folder = dialogs.get_existing_dir(self, L().t("add_folder"))
+        if folder:
+            self._process_folder(folder, append=True)
+
+    def _loaded_paths(self) -> set:
+        df = self._idf.get_all()
+        if df.empty:
+            return set()
+        return {os.path.normpath(str(p)).lower() for p in df["file_path"]}
+
+    def _process_folder(self, folder: str, append: bool = False) -> None:
         if not os.path.isdir(folder):
             dialogs.info(self, L().t("folder_missing"), "Info")
             self._remove_recent(folder)
@@ -634,11 +646,19 @@ class MainWindow(QMainWindow):
             for f in os.listdir(folder)
             if f.lower().endswith(".pdf")
         ]
-        if paths:
-            self._add_recent(folder)
-            self._process_files(paths)
-        else:
+        if not paths:
             dialogs.info(self, L().t("no_invoices"), "Info")
+            return
+        if append:
+            # skip PDFs already loaded so re-adding a folder doesn't duplicate
+            loaded = self._loaded_paths()
+            paths = [p for p in paths if os.path.normpath(p).lower() not in loaded]
+            if not paths:
+                self._add_recent(folder)
+                dialogs.info(self, L().t("folder_already_loaded"), "Info")
+                return
+        self._add_recent(folder)
+        self._process_files(paths, append=append)
 
     # ------------------------------------------------------------------
     # Recent folders (history for "Open folder")
@@ -692,6 +712,10 @@ class MainWindow(QMainWindow):
             f"QMenu::item:disabled{{color:{C('ink4')};}}"
             f"QMenu::separator{{height:1px;background:{C('line')};margin:4px 6px;}}"
         )
+        add_act = menu.addAction(L().t("add_folder"))
+        add_act.triggered.connect(self._add_folder)
+        menu.addSeparator()
+
         recents = self._recent_folders()
         if not recents:
             act = menu.addAction(L().t("recent_empty"))

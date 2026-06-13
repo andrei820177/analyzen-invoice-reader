@@ -177,5 +177,7 @@
   "ctx_copy": "Kopiér",
   "ctx_paste": "Sæt ind",
   "ctx_delete": "Slet",
-  "ctx_select_all": "Markér alt"
+  "ctx_select_all": "Markér alt",
+  "add_folder": "Tilføj mappe...",
+  "folder_already_loaded": "Alle PDF'er fra denne mappe er allerede indlæst."
 }

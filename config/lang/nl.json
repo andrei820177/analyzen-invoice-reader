@@ -177,5 +177,7 @@
   "ctx_copy": "Kopiëren",
   "ctx_paste": "Plakken",
   "ctx_delete": "Verwijderen",
-  "ctx_select_all": "Alles selecteren"
+  "ctx_select_all": "Alles selecteren",
+  "add_folder": "Map toevoegen...",
+  "folder_already_loaded": "Alle PDF's uit deze map zijn al geladen."
 }

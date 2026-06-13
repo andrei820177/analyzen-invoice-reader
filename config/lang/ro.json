@@ -177,5 +177,7 @@
   "ctx_copy": "Copiaza",
   "ctx_paste": "Lipeste",
   "ctx_delete": "Sterge",
-  "ctx_select_all": "Selecteaza tot"
+  "ctx_select_all": "Selecteaza tot",
+  "add_folder": "Adauga folder...",
+  "folder_already_loaded": "Toate PDF-urile din acest folder sunt deja incarcate."
 }

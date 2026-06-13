@@ -177,5 +177,7 @@
   "ctx_copy": "Копировать",
   "ctx_paste": "Вставить",
   "ctx_delete": "Удалить",
-  "ctx_select_all": "Выделить всё"
+  "ctx_select_all": "Выделить всё",
+  "add_folder": "Добавить папку...",
+  "folder_already_loaded": "Все PDF из этой папки уже загружены."
 }

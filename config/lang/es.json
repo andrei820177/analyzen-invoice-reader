@@ -177,5 +177,7 @@
   "ctx_copy": "Copiar",
   "ctx_paste": "Pegar",
   "ctx_delete": "Eliminar",
-  "ctx_select_all": "Seleccionar todo"
+  "ctx_select_all": "Seleccionar todo",
+  "add_folder": "Añadir carpeta...",
+  "folder_already_loaded": "Todos los PDF de esta carpeta ya están cargados."
 }

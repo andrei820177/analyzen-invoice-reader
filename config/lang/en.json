@@ -177,5 +177,7 @@
   "ctx_copy": "Copy",
   "ctx_paste": "Paste",
   "ctx_delete": "Delete",
-  "ctx_select_all": "Select all"
+  "ctx_select_all": "Select all",
+  "add_folder": "Add folder...",
+  "folder_already_loaded": "All PDFs from this folder are already loaded."
 }

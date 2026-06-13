@@ -177,5 +177,7 @@
   "ctx_copy": "Kopiuj",
   "ctx_paste": "Wklej",
   "ctx_delete": "Usuń",
-  "ctx_select_all": "Zaznacz wszystko"
+  "ctx_select_all": "Zaznacz wszystko",
+  "add_folder": "Dodaj folder...",
+  "folder_already_loaded": "Wszystkie pliki PDF z tego folderu są już wczytane."
 }
